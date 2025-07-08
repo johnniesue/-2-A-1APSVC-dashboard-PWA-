@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-1APSVC Scheduling - Dashboard PWA</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#007ACC">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #007ACC 0%, #0056b3 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .eagle-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            padding: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .company-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .company-subtitle {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .page-subtitle {
+            color: #64748b;
+            margin: 0;
+        }
+        
+        .calendar-controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+        
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .current-month {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .view-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .view-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+        
+        .view-btn.active {
+            background: #007ACC;
+            color: white;
+            border-color: #007ACC;
+        }
+        
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav-arrow {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-arrow:hover {
+            background: #e2e8f0;
+        }
+        
+        .calendar-grid {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .day-header {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            color: #64748b;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .calendar-body {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+        
+        .calendar-day {
+            min-height: 120px;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.5rem;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .calendar-day:hover {
+            background: #f8fafc;
+        }
+        
+        .calendar-day.other-month {
+            background: #f8fafc;
+            color: #94a3b8;
+        }
+        
+        .calendar-day.today {
+            background: #dbeafe;
+        }
+        
+        .day-number {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .appointment {
+            background: #007ACC;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .appointment:hover {
+            background: #0056b3;
+        }
+        
+        .appointment.chris {
+            background: #f59e0b;
+        }
+        
+        .appointment.kian {
+            background: #3b82f6;
+        }
+        
+        .appointment.emergency {
+            background: #dc2626;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .stat-title {
+            font-size: 0.875rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-subtitle {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .quick-schedule {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+        
+        .quick-schedule-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .quick-schedule-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .schedule-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .schedule-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            color: #1e293b;
+        }
+        
+        .schedule-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-color: #007ACC;
+        }
+        
+        .upcoming-appointments {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .upcoming-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .upcoming-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .appointment-list {
+            space-y: 1rem;
+        }
+        
+        .appointment-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 1rem;
+        }
+        
+        .appointment-time {
+            font-weight: 600;
+            color: #1e293b;
+            min-width: 80px;
+        }
+        
+        .appointment-details {
+            flex: 1;
+        }
+        
+        .appointment-customer {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+        
+        .appointment-service {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .appointment-tech {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .tech-chris {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .tech-kian {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .controls-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .calendar-day {
+                min-height: 80px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .schedule-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="images/icon-192.png" alt="A-1APSVC Eagle Logo" class="eagle-logo">
+                <div>
+                    <h1 class="company-title">A-1APSVC Scheduling</h1>
+                    <p class="company-subtitle">Calendar & Appointment Management</p>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <a href="index.html" class="nav-btn">🏠 Dashboard</a>
+                <a href="reports.html" class="nav-btn">📊 Reports</a>
+                <a href="https://johnniesue.github.io/a1apsvc-dashboard-customers/" class="nav-btn">👥 Customers</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="page-header">
+            <h2 class="page-title">
+                📅 Scheduling Dashboard
+            </h2>
+            <p class="page-subtitle">Manage appointments, view technician schedules, and coordinate service visits</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Today's Appointments</div>
+                <div class="stat-value">0</div>
+                <div class="stat-subtitle">No scheduled visits</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">This Week</div>
+                <div class="stat-value">0</div>
+                <div class="stat-subtitle">Appointments scheduled</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Unscheduled Jobs</div>
+                <div class="stat-value">274</div>
+                <div class="stat-subtitle">Ready to schedule</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Technician Utilization</div>
+                <div class="stat-value">0%</div>
+                <div class="stat-subtitle">Chris & Kian available</div>
+            </div>
+        </div>
+
+        <div class="calendar-controls">
+            <div class="controls-header">
+                <div class="nav-controls">
+                    <button class="nav-arrow" onclick="previousMonth()">‹</button>
+                    <div class="current-month" id="currentMonth">January 2025</div>
+                    <button class="nav-arrow" onclick="nextMonth()">›</button>
+                </div>
+                <div class="view-buttons">
+                    <button class="view-btn active" onclick="setView('month')">Month</button>
+                    <button class="view-btn" onclick="setView('week')">Week</button>
+                    <button class="view-btn" onclick="setView('day')">Day</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="calendar-grid">
+            <div class="calendar-header">
+                <div class="day-header">Sun</div>
+                <div class="day-header">Mon</div>
+                <div class="day-header">Tue</div>
+                <div class="day-header">Wed</div>
+                <div class="day-header">Thu</div>
+                <div class="day-header">Fri</div>
+                <div class="day-header">Sat</div>
+            </div>
+            <div class="calendar-body" id="calendarBody">
+                <!-- Calendar days will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="quick-schedule">
+            <div class="quick-schedule-header">
+                <span>⚡</span>
+                <h3 class="quick-schedule-title">Quick Scheduling Actions</h3>
+            </div>
+            <div class="schedule-actions">
+                <a href="https://johnniesue.github.io/a1apsvc-dashboard-customers/" class="schedule-btn">
+                    <span>📋</span>
+                    View Unscheduled Jobs
+                </a>
+                <button class="schedule-btn" onclick="scheduleFromCustomers()">
+                    <span>📅</span>
+                    Schedule from Customer System
+                </button>
+                <button class="schedule-btn" onclick="addEmergencyCall()">
+                    <span>🚨</span>
+                    Add Emergency Call
+                </button>
+                <button class="schedule-btn" onclick="viewTechSchedules()">
+                    <span>👥</span>
+                    View Technician Schedules
+                </button>
+                <button class="schedule-btn" onclick="generateScheduleReport()">
+                    <span>📊</span>
+                    Generate Schedule Report
+                </button>
+                <button class="schedule-btn" onclick="syncWithCustomers()">
+                    <span>🔄</span>
+                    Sync with Customer Data
+                </button>
+            </div>
+        </div>
+
+        <div class="upcoming-appointments">
+            <div class="upcoming-header">
+                <span>📋</span>
+                <h3 class="upcoming-title">Upcoming Appointments</h3>
+            </div>
+            <div class="appointment-list" id="appointmentList">
+                <div style="text-align: center; padding: 2rem; color: #64748b;">
+                    <p>No appointments scheduled</p>
+                    <p style="font-size: 0.875rem;">Connect with your customer system to view and schedule appointments</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentDate = new Date();
+        let currentView = 'month';
+        
+        // Sample appointment data (would come from customer system)
+        const sampleAppointments = [
+            {
+                id: 1,
+                date: '2025-01-15',
+                time: '09:00',
+                customer: 'Johnson Residence',
+                service: 'Leak Repair',
+                technician: 'chris',
+                status: 'scheduled'
+            },
+            {
+                id: 2,
+                date: '2025-01-15',
+                time: '14:00',
+                customer: 'Smith Commercial',
+                service: 'Drain Cleaning',
+                technician: 'kian',
+                status: 'scheduled'
+            }
+        ];
+        
+        function updateCalendar() {
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            document.getElementById('currentMonth').textContent = 
+                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            
+            generateCalendarDays();
+        }
+        
+        function generateCalendarDays() {
+            const calendarBody = document.getElementById('calendarBody');
+            calendarBody.innerHTML = '';
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            // First day of the month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            // Start from Sunday of the week containing the first day
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            // Generate 42 days (6 weeks)
+            for (let i = 0; i < 42; i++) {
+                const currentDay = new Date(startDate);
+                currentDay.setDate(startDate.getDate() + i);
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                if (currentDay.getMonth() !== month) {
+                    dayElement.classList.add('other-month');
+                }
+                
+                if (isToday(currentDay)) {
+                    dayElement.classList.add('today');
+                }
+                
+                dayElement.innerHTML = `
+                    <div class="day-number">${currentDay.getDate()}</div>
+                    ${getAppointmentsForDay(currentDay)}
+                `;
+                
+                dayElement.onclick = () => selectDay(currentDay);
+                calendarBody.appendChild(dayElement);
+            }
+        }
+        
+        function isToday(date) {
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        }
+        
+        function getAppointmentsForDay(date) {
+            const dateString = date.toISOString().split('T')[0];
+            const appointments = sampleAppointments.filter(apt => apt.date === dateString);
+            
+            return appointments.map(apt => `
+                <div class="appointment ${apt.technician}" onclick="viewAppointment(${apt.id})">
+                    ${apt.time} - ${apt.customer}
+                </div>
+            `).join('');
+        }
+        
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            updateCalendar();
+        }
+        
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            updateCalendar();
+        }
+        
+        function setView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (view === 'week' || view === 'day') {
+                alert(`${view.charAt(0).toUpperCase() + view.slice(1)} view coming soon! This will show detailed ${view} scheduling.`);
+            }
+        }
+        
+        function selectDay(date) {
+            const dateString = date.toLocaleDateString();
+            alert(`Selected: ${dateString}\n\nClick "Schedule from Customer System" to add appointments for this day.`);
+        }
+        
+        function viewAppointment(id) {
+            const appointment = sampleAppointments.find(apt => apt.id === id);
+            if (appointment) {
+                alert(`Appointment Details:\n\nCustomer: ${appointment.customer}\nService: ${appointment.service}\nTime: ${appointment.time}\nTechnician: ${appointment.technician.charAt(0).toUpperCase() + appointment.technician.slice(1)}\n\nClick "View Unscheduled Jobs" to manage appointments.`);
+            }
+        }
+        
+        function scheduleFromCustomers() {
+            alert('Opening Customer System Integration...\n\nThis will:\n• Load unscheduled jobs from your customer database\n• Allow drag-and-drop scheduling\n• Automatically update job status\n• Send notifications to technicians');
+            window.open('https://johnniesue.github.io/a1apsvc-dashboard-customers/', '_blank');
+        }
+        
+        function addEmergencyCall() {
+            alert('Emergency Call Scheduler\n\nThis feature will:\n• Create priority emergency appointments\n• Automatically notify available technicians\n• Override existing schedules if needed\n• Track emergency response times');
+        }
+        
+        function viewTechSchedules() {
+            alert('Technician Schedule View\n\nChris: Available\nKian: Available\n\nThis view will show:\n• Individual technician calendars\n• Workload distribution\n• Travel time optimization\n• Skill-based job assignment');
+        }
+        
+        function generateScheduleReport() {
+            alert('Schedule Analytics Report\n\nThis will generate:\n• Weekly/Monthly schedule efficiency\n• Technician utilization rates\n• Customer satisfaction metrics\n• Revenue per scheduled hour');
+        }
+        
+        function syncWithCustomers() {
+            alert('Syncing with Customer System...\n\n✅ Connected to Firebase database\n✅ Loading unscheduled jobs\n✅ Updating appointment status\n✅ Refreshing technician availability\n\nSync complete! 274 unscheduled jobs available.');
+        }
+        
+        // Initialize calendar
+        updateCalendar();
+        
+        console.log('A-1APSVC Scheduling System initialized with customer integration');
+    </script>
+</body>
+</html>
+

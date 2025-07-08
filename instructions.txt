@@ -1,0 +1,9 @@
+<!-- Add this to your <head> section -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- Add this before </body> -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js');
+  }
+</script>
