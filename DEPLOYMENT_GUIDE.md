@@ -10,16 +10,23 @@ Your PWA project contains the following files:
 
 ```
 a1-dashboard-pwa/
-├── index.html              # Main dashboard page with PWA integration
-├── manifest.json           # PWA manifest file
-├── service-worker.js       # Service worker for offline functionality
-├── style.css              # Dashboard styling
-├── script.js              # Dashboard JavaScript functionality
-├── instructions.txt        # Original setup instructions
-├── images/
-│   ├── icon-192.png       # App icon (192x192)
-│   └── icon-512.png       # App icon (512x512)
-└── DEPLOYMENT_GUIDE.md    # This guide
+├── dashboard/               # Main application folder (Vite project)
+│   ├── index.html          # Main dashboard page with PWA integration
+│   ├── reports.html        # Reports page
+│   ├── schedule.html       # Schedule page
+│   ├── manifest.json       # PWA manifest file
+│   ├── service-worker.js   # Service worker for offline functionality
+│   ├── style.css           # Dashboard styling
+│   ├── script.js           # Dashboard JavaScript functionality
+│   ├── package.json        # Node.js dependencies and scripts
+│   ├── vite.config.js      # Vite build configuration
+│   ├── images/
+│   │   ├── icon-192.png    # App icon (192x192)
+│   │   └── icon-512.png    # App icon (512x512)
+│   └── .gitignore          # Git ignore rules
+├── DEPLOYMENT_GUIDE.md     # This guide
+├── README.md               # Project documentation
+└── instructions.txt        # Original setup instructions
 ```
 
 ## 🚀 Deployment Options
@@ -63,14 +70,28 @@ a1-dashboard-pwa/
 3. **Access Your PWA**:
    - URL: `https://yourusername.github.io/a1-dashboard-pwa/`
 
-### Option 3: Other Web Hosts
+### Option 3: Vercel Deployment
 
-For other hosting providers (Netlify, Vercel, etc.):
+For Vercel deployment with the new Vite structure:
 
-1. Upload all files to your web host
-2. Ensure the root directory contains `index.html`
-3. Verify HTTPS is enabled (required for PWA features)
-4. Test the manifest.json and service-worker.js are accessible
+1. **Connect your GitHub repository to Vercel**
+2. **Configure Project Settings**:
+   - Root Directory: `dashboard`
+   - Build Command: `vite build`
+   - Output Directory: `dist`
+   - Install Command: `npm install`
+3. **Deploy with Clear Cache** to force a fresh build
+4. **Verify deployment** by testing the PWA features
+
+### Option 4: Other Web Hosts
+
+For other hosting providers (Netlify, etc.):
+
+1. Build the project: `cd dashboard && npm run build`
+2. Upload the contents of the `dashboard/dist` folder to your web host
+3. Ensure the root directory contains `index.html`
+4. Verify HTTPS is enabled (required for PWA features)
+5. Test the manifest.json and service-worker.js are accessible
 
 ## 🔧 Configuration
 
