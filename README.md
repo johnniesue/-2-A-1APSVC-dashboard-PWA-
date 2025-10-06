@@ -21,20 +21,26 @@ A Progressive Web App (PWA) dashboard for A-1APSVC that provides an app-like exp
 ## 📁 File Structure
 
 ```
-├── index.html              # Main dashboard page
-├── manifest.json           # PWA configuration
-├── service-worker.js       # Offline functionality
-├── style.css              # Dashboard styling
-├── script.js              # Interactive features
-├── images/
-│   ├── icon-192.png       # App icon (192x192)
-│   └── icon-512.png       # App icon (512x512)
-├── DEPLOYMENT_GUIDE.md    # Detailed deployment instructions
-└── README.md              # This file
+├── dashboard/                # Main application folder (Vite project)
+│   ├── index.html           # Main dashboard page
+│   ├── reports.html         # Reports page
+│   ├── schedule.html        # Schedule page
+│   ├── manifest.json        # PWA configuration
+│   ├── service-worker.js    # Offline functionality
+│   ├── style.css           # Dashboard styling
+│   ├── script.js           # Interactive features
+│   ├── package.json        # Node.js dependencies and scripts
+│   ├── vite.config.js      # Vite build configuration
+│   └── images/
+│       ├── icon-192.png    # App icon (192x192)
+│       └── icon-512.png    # App icon (512x512)
+├── DEPLOYMENT_GUIDE.md     # Detailed deployment instructions
+└── README.md               # This file
 ```
 
 ## 🛠️ Technology Stack
 
+- **Vite**: Fast build tool and development server
 - **HTML5**: Semantic markup with PWA meta tags
 - **CSS3**: Modern styling with CSS Grid and Flexbox
 - **Vanilla JavaScript**: No dependencies, lightweight and fast
@@ -72,10 +78,34 @@ A Progressive Web App (PWA) dashboard for A-1APSVC that provides an app-like exp
 
 ## 🔧 Development
 
+## 🔧 Development
+
+### Getting Started
+1. Navigate to the dashboard folder:
+   ```bash
+   cd dashboard
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Build for production:
+   ```bash
+   npm run build
+   ```
+
 ### Local Testing
-1. Serve files using a local web server (required for service worker)
-2. Use Chrome DevTools Application tab to test PWA features
-3. Test offline mode using DevTools Network tab
+1. Use the development server with `npm run dev` (recommended)
+2. Or serve files using a local web server (required for service worker)
+3. Use Chrome DevTools Application tab to test PWA features
+4. Test offline mode using DevTools Network tab
 
 ### Browser Support
 - Chrome 67+ (full support)
