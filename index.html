@@ -16,29 +16,42 @@
     <link rel="apple-touch-icon" href="/images/icon-192.png">
     
     <style>
+        /* base body */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f8fafc;
             margin: 0;
             padding: 0;
             line-height: 1.6;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
         }
-        
+
+        /* ---------- Header (merged: original top + integrated tab row) ---------- */
         .header {
             background: linear-gradient(135deg, #007ACC 0%, #0056b3 100%);
             color: white;
             padding: 1rem 2rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        
+
+        /* layout for both header rows */
         .header-content {
             max-width: 1200px;
             margin: 0 auto;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 12px;
         }
-        
+
+        /* top row: logo + status (keeps your original look) */
+        .header-top {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:12px;
+        }
+
         .logo-section {
             display: flex;
             align-items: center;
@@ -76,7 +89,111 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-        
+
+        /* bottom row: integrated tabs, search, right controls */
+        .header-bottom {
+            display:flex;
+            align-items:center;
+            width:100%;
+            gap:12px;
+        }
+        .hb-left { flex:1; min-width:0; overflow:hidden; }
+        .hb-center { flex:0 1 480px; display:flex; justify-content:center; }
+        .hb-right { display:flex; align-items:center; gap:10px; flex:0; }
+
+        /* Tabs */
+        .tabs {
+            display:flex;
+            gap:10px;
+            align-items:center;
+            overflow:auto;
+            padding-bottom:4px;
+            -webkit-overflow-scrolling: touch;
+            white-space:nowrap;
+        }
+        .tab {
+            background:transparent;
+            color:rgba(255,255,255,0.85);
+            border:0;
+            padding:8px 6px;
+            font-weight:600;
+            cursor:pointer;
+            position:relative;
+            border-radius:6px;
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            font-size:14px;
+        }
+        .tab:focus { outline:2px solid rgba(255,255,255,0.08); outline-offset:3px; }
+        .tab.active { color: #fff; }
+        .tab.active::after {
+            content: "";
+            position:absolute;
+            left:6px;
+            right:6px;
+            bottom:-8px;
+            height:3px;
+            background:#fff;
+            border-radius:3px;
+        }
+
+        .badge {
+            display:inline-block;
+            background:#1ea7ff;
+            color:white;
+            font-size:11px;
+            padding:2px 6px;
+            border-radius:999px;
+            margin-left:6px;
+            line-height:1;
+        }
+
+        /* Search */
+        .search {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            background: rgba(255,255,255,0.06);
+            padding:6px 10px;
+            border-radius:8px;
+            width:100%;
+            max-width:480px;
+        }
+        .search input {
+            background:transparent;
+            border:0;
+            color:white;
+            outline:none;
+            width:100%;
+            font-size:14px;
+        }
+        .search .search-icon { width:18px; height:18px; color:rgba(255,255,255,0.8); flex:0 0 18px; }
+
+        /* Right controls */
+        .btn-new {
+            background:transparent;
+            border:1px solid rgba(255,255,255,0.12);
+            color:white;
+            padding:6px 12px;
+            border-radius:18px;
+            font-weight:600;
+            cursor:pointer;
+        }
+        .icon-btn {
+            background:transparent;
+            border:0;
+            color:rgba(255,255,255,0.85);
+            padding:8px;
+            border-radius:8px;
+            cursor:pointer;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        .avatar {
+            width:36px; height:36px; border-radius:50%; background:#f08d4a; display:flex; align-items:center; justify-content:center; color:white; font-weight:700;
+        }
+
+        /* ---------- Rest of the dashboard CSS (original) ---------- */
         .main-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -477,15 +594,17 @@
             color: #64748b;
         }
         
+        /* responsive */
+        @media (max-width: 920px) {
+            .hb-center { display:none; } /* hide search on narrow screens */
+        }
         @media (max-width: 768px) {
             .main-container {
                 padding: 1rem;
             }
             
             .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
+                gap: 8px;
             }
             
             .metrics-grid {
@@ -500,20 +619,81 @@
                 grid-template-columns: 1fr;
             }
         }
+        @media (max-width: 560px) {
+            .tabs { gap:6px; }
+            .tab { padding:6px 4px; font-size:13px; }
+            .btn-new { display:none; }
+        }
     </style>
 </head>
 <body>
-    <header class="header">
+    <!-- Integrated header: top row (logo/status) + bottom row (tabs/search/controls) -->
+    <header class="header" role="banner">
         <div class="header-content">
-            <div class="logo-section">
-                <div>
-                    <h1 class="company-title">A-1APSVC Dashboard</h1>
-                    <p class="company-subtitle">Professional Service Management</p>
+            <!-- top row: original logo + status -->
+            <div class="header-top">
+                <div class="logo-section">
+                    <div>
+                        <h1 class="company-title">A-1APSVC Dashboard</h1>
+                        <p class="company-subtitle">Professional Service Management</p>
+                    </div>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot" aria-hidden="true"></div>
+                    <span>Online</span>
                 </div>
             </div>
-            <div class="status-indicator">
-                <div class="status-dot"></div>
-                <span>Online</span>
+
+            <!-- bottom row: integrated tab bar -->
+            <div class="header-bottom" role="navigation" aria-label="Primary navigation">
+                <div class="hb-left">
+                    <nav class="tabs" role="tablist" aria-label="Main">
+                        <button class="tab active" role="tab" aria-selected="true" data-tab="Home">Home</button>
+                        <button class="tab" role="tab" aria-selected="false" data-tab="Dash">Dash</button>
+                        <button class="tab" role="tab" aria-selected="false" data-tab="Inbox">
+                            Inbox
+                            <span class="badge" id="inboxBadge" aria-hidden="true">1</span>
+                        </button>
+                        <button class="tab" role="tab" aria-selected="false" data-tab="Schedule">Schedule</button>
+                        <button class="tab" role="tab" aria-selected="false" data-tab="Customers">Customers</button>
+                        <button class="tab" role="tab" aria-selected="false" data-tab="My money">My money</button>
+                        <button class="tab" role="tab" aria-selected="false" data-tab="Payroll">Payroll</button>
+                        <button class="tab" role="tab" aria-selected="false" data-tab="Reporting">Reporting</button>
+                        <button class="tab" role="tab" aria-selected="false" data-tab="Marketing">Marketing</button>
+                        <button class="tab" role="tab" aria-selected="false" data-tab="Price book">Price book</button>
+                        <button class="tab" role="tab" aria-selected="false" data-tab="Pipeline">Pipeline</button>
+                    </nav>
+                </div>
+
+                <div class="hb-center" aria-hidden="false">
+                    <div class="search" role="search" aria-label="Site search">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <input id="globalSearch" type="search" placeholder="Search" aria-label="Search the dashboard" />
+                    </div>
+                </div>
+
+                <div class="hb-right">
+                    <button class="btn-new" id="newBtn">New</button>
+
+                    <button class="icon-btn" title="Notifications" aria-label="Notifications" id="notifyBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zM18 16v-5a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+
+                    <button class="icon-btn" title="Apps" aria-label="Apps" id="appsBtn" onclick="openApps()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                            <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                            <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                            <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                        </svg>
+                    </button>
+
+                    <div class="avatar" title="You" aria-hidden="true">CC</div>
+                </div>
             </div>
         </div>
     </header>
@@ -524,7 +704,7 @@
                 <h2 class="welcome-title">
                     👋 Hi, Chris
                 </h2>
-                <div class="date-time" id="currentDateTime"></div>
+                <div class="date-time" id="currentDateTime" aria-live="polite"></div>
             </div>
             <p class="welcome-subtitle">Here's what's happening with your business today</p>
         </div>
@@ -680,7 +860,7 @@
                 <span>🗺️</span>
                 <h3 class="service-area-title">Service Area Map</h3>
             </div>
-            <div id="serviceAreaMap" style="width: 100%; height: 300px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div id="serviceAreaMap" style="width: 100%; height: 300px; border-radius: 8px; border: 1px solid #e2e8f0; position:relative;">
                 <iframe 
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d429168.10916846283!2d-96.96523!3d33.040417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864c19f77b45974b%3A0xb9ec9ba4f647678f!2sLucas%2C%20TX!5e0!3m2!1sen!2sus!4v1635959999999!5m2!1sen!2sus&zoom=10"
                     width="100%" 
@@ -743,78 +923,133 @@
         }
     </script>
 
+    <!-- Integrated header/tab behavior + other utilities -->
     <script>
-        // Update current date and time
-        function updateDateTime() {
-            const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            };
-            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
-        }
-        
-        // Update every minute
-        updateDateTime();
-        setInterval(updateDateTime, 60000);
-        
-        // Quick action functions
-        function updateStatus(status) {
-            const statusMessages = {
-                'scheduled': 'Job marked as scheduled ✅',
-                'enroute': 'Status updated: En route to customer 🚗',
-                'started': 'Job started - timer activated 🔧',
-                'complete': 'Job completed successfully! ✅'
-            };
-            
-            alert(statusMessages[status] || 'Status updated');
-        }
-        
-        function showHelp() {
-            alert('Help & Support\n\nFor technical support:\n📞 Call: 469-900-5194\n📧 Email: johnniesue@a-1apsvc.com\n\nFor system issues, contact your administrator.');
-        }
-        
-        function showComingSoon(feature) {
-            alert(`${feature} feature is coming soon!\n\nThis will integrate with your existing customer management system to provide comprehensive ${feature.toLowerCase()} functionality.`);
-        }
-        
-        // Install prompt handling
-        let deferredPrompt;
-        
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            
-            // Show install banner
-            const installBanner = document.createElement('div');
-            installBanner.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; right: 0; background: #007ACC; color: white; padding: 1rem; text-align: center; z-index: 1000;">
-                    <span>📱 Install A-1APSVC Dashboard App for quick access</span>
-                    <button onclick="installApp()" style="margin-left: 1rem; background: white; color: #007ACC; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Install App</button>
-                    <button onclick="this.parentElement.parentElement.remove()" style="margin-left: 0.5rem; background: transparent; color: white; border: 1px solid white; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Later</button>
-                </div>
-            `;
-            document.body.appendChild(installBanner);
-        });
-        
-        function installApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((result) => {
-                    if (result.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
+        (function () {
+            // Tabs behavior (activation + keyboard navigation)
+            const tabs = Array.from(document.querySelectorAll('.tab'));
+            const tablist = document.querySelector('[role="tablist"]');
+
+            function activateTab(targetTab, skipConsole) {
+                tabs.forEach(t => {
+                    const isTarget = t === targetTab;
+                    t.classList.toggle('active', isTarget);
+                    t.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+                });
+                const name = (targetTab && (targetTab.dataset.tab || targetTab.textContent.trim())) || '';
+                if (!skipConsole) console.log('Activated tab:', name);
+                // TODO: wire to routing or show/hide content for each section
+                // Example: if (name === 'Customers') location.href = '/customers.html';
+            }
+
+            if (tabs.length) {
+                // click
+                tabs.forEach(t => {
+                    t.addEventListener('click', () => {
+                        activateTab(t);
+                        if ((t.dataset.tab || t.textContent).trim() === 'Inbox') {
+                            const b = document.getElementById('inboxBadge');
+                            if (b) b.style.display = 'none'; // simple UX: hide badge when clicked
+                        }
+                    });
+                });
+
+                // keyboard navigation (left/right)
+                tablist && tablist.addEventListener('keydown', (e) => {
+                    const key = e.key;
+                    const current = tabs.findIndex(t => t.classList.contains('active'));
+                    if (key === 'ArrowRight') {
+                        e.preventDefault();
+                        const next = (current + 1) % tabs.length;
+                        activateTab(tabs[next], true);
+                        tabs[next].focus();
+                    } else if (key === 'ArrowLeft') {
+                        e.preventDefault();
+                        const prev = (current - 1 + tabs.length) % tabs.length;
+                        activateTab(tabs[prev], true);
+                        tabs[prev].focus();
                     }
-                    deferredPrompt = null;
                 });
             }
-        }
-        
-        console.log('A-1APSVC Dashboard PWA initialized with real data integration');
+
+            // New button placeholder
+            document.getElementById('newBtn')?.addEventListener('click', () => {
+                alert('Create a new item (wire this to your create flow).');
+            });
+
+            // Apps button placeholder
+            window.openApps = function() {
+                alert('Open apps menu (implement as needed).');
+            };
+
+            // Date/time updater (keeps your original behavior)
+            function updateDateTime() {
+                const now = new Date();
+                const options = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                const el = document.getElementById('currentDateTime');
+                if (el) el.textContent = now.toLocaleDateString('en-US', options);
+            }
+            updateDateTime();
+            setInterval(updateDateTime, 60000);
+
+            // Install prompt handling (keeps your original behavior)
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+
+                // Show install banner (simple inline)
+                const installBanner = document.createElement('div');
+                installBanner.innerHTML = `
+                    <div style="position: fixed; top: 0; left: 0; right: 0; background: #007ACC; color: white; padding: 1rem; text-align: center; z-index: 1200;">
+                        <span>📱 Install A-1APSVC Dashboard App for quick access</span>
+                        <button id="installNowBtn" style="margin-left: 1rem; background: white; color: #007ACC; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Install App</button>
+                        <button id="installLaterBtn" style="margin-left: 0.5rem; background: transparent; color: white; border: 1px solid white; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Later</button>
+                    </div>
+                `;
+                document.body.appendChild(installBanner);
+                document.getElementById('installNowBtn')?.addEventListener('click', installApp);
+                document.getElementById('installLaterBtn')?.addEventListener('click', () => installBanner.remove());
+            });
+
+            function installApp() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((result) => {
+                        if (result.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        }
+                        deferredPrompt = null;
+                    });
+                }
+            }
+
+            // Expose small utilities used elsewhere
+            window.updateStatus = function(status) {
+                const statusMessages = {
+                    'scheduled': 'Job marked as scheduled ✅',
+                    'enroute': 'Status updated: En route to customer 🚗',
+                    'started': 'Job started - timer activated 🔧',
+                    'complete': 'Job completed successfully! ✅'
+                };
+                alert(statusMessages[status] || 'Status updated');
+            };
+            window.showHelp = function() {
+                alert('Help & Support\n\nFor technical support:\n📞 Call: 469-900-5194\n📧 Email: johnniesue@a-1apsvc.com\n\nFor system issues, contact your administrator.');
+            };
+            window.showComingSoon = function(feature) {
+                alert(`${feature} feature is coming soon!\n\nThis will integrate with your existing customer management system to provide comprehensive ${feature.toLowerCase()} functionality.`);
+            };
+
+            console.log('Header with integrated tabs initialized');
+        })();
     </script>
 </body>
 </html>
-
