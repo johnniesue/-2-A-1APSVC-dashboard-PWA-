@@ -1,502 +1,327 @@
-// A-1 Dashboard PWA JavaScript
+/*
+  header-behavior.js
+  - Handles tab activation, keyboard navigation, deep-linking, persistence, search debounce and inbox count updating.
+  - Drop into your project (e.g. /header-behavior.js) and include after /script.js in index.html.
+*/
+(function () {
+  const STORAGE_KEY = 'a1_active_tab';
+  const INBOX_COUNT_ENDPOINT = null; // <-- set to your API endpoint or Firebase route if available, e.g. '/api/inbox/count'
+  const INBOX_POLL_MS = 60000; // poll interval for inbox count; ignored if INBOX_COUNT_ENDPOINT === null
 
-class A1Dashboard {
-    constructor() {
-        this.init();
+  // small debounce with fallback to A1Dashboard static debounce or instance constructor debounce if available
+  function debounce(fn, wait = 250) {
+    // Try class static method A1Dashboard.debounce
+    if (window.A1Dashboard && typeof window.A1Dashboard.debounce === 'function') {
+      return window.A1Dashboard.debounce(fn, wait);
+    }
+    // Try instance constructor if the instance was attached as window.a1Dashboard
+    if (window.a1Dashboard && window.a1Dashboard.constructor && typeof window.a1Dashboard.constructor.debounce === 'function') {
+      return window.a1Dashboard.constructor.debounce(fn, wait);
+    }
+    // Fallback local debounce
+    let t;
+    return function (...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
+
+  function onReady(fn) {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(fn, 0);
+    } else {
+      document.addEventListener('DOMContentLoaded', fn);
+    }
+  }
+
+  onReady(() => {
+    let tabs = Array.from(document.querySelectorAll('.tab'));
+    const tablist = document.querySelector('[role="tablist"]');
+    const inboxBadge = document.getElementById('inboxBadge');
+    const searchInput = document.getElementById('globalSearch');
+    const newBtn = document.getElementById('newBtn');
+
+    if (!tabs.length || !tablist) {
+      // nothing to wire
+      return;
     }
 
-    init() {
-        this.setupServiceWorker();
-        this.setupInstallPrompt();
-        this.setupOnlineStatus();
-        this.setupDashboardFeatures();
-        console.log('A-1APSVC Dashboard PWA initialized');
+    // Utility: slugify for panel ids
+    function slugify(str) {
+      return String(str).trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
     }
 
-    // Service Worker Setup
-    setupServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then((registration) => {
-                    console.log('Service Worker registered:', registration.scope);
-                    
-                    // Check for updates
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                this.showUpdateNotification();
-                            }
-                        });
-                    });
-                })
-                .catch((error) => {
-                    console.error('Service Worker registration failed:', error);
-                });
+    // Activate a tab element and update ARIA + classes + hash + storage
+    function activateTab(targetTab, opts = {}) {
+      if (!targetTab) return;
+      tabs.forEach(t => {
+        const isTarget = t === targetTab;
+        t.classList.toggle('active', isTarget);
+        t.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+        // manage tabindex for proper keyboard navigation
+        t.setAttribute('tabindex', isTarget ? '0' : '-1');
+        if (isTarget && opts.focus !== false) {
+          try { t.focus({ preventScroll: true }); } catch (e) { t.focus(); }
         }
+      });
+
+      const name = (targetTab.dataset.tab || targetTab.textContent || '').trim();
+
+      // Update hash for deep link (format: #tab=Name)
+      try {
+        const encoded = encodeURIComponent(name);
+        if (history && history.replaceState) {
+          const url = new URL(window.location.href);
+          url.hash = `tab=${encoded}`;
+          history.replaceState(null, '', url.toString());
+        } else {
+          location.hash = `tab=${encodeURIComponent(name)}`;
+        }
+      } catch (e) {
+        location.hash = `tab=${encodeURIComponent(name)}`;
+      }
+
+      // persist
+      try {
+        localStorage.setItem(STORAGE_KEY, name);
+      } catch (e) { /* ignore */ }
+
+      // Hook: show/hide content panels
+      // If you implement panels, use ids like "panel-<slugified-name>" and toggle them here.
+      // Default behavior: attempt to show element with id `panel-<slug>` and hide siblings with [role="tabpanel"]
+      const panelId = `panel-${slugify(name)}`;
+      const panel = document.getElementById(panelId);
+      if (panel) {
+        // hide other panels
+        const panels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
+        panels.forEach(p => {
+          if (p.id === panelId) {
+            p.hidden = false;
+            p.setAttribute('aria-hidden', 'false');
+          } else {
+            p.hidden = true;
+            p.setAttribute('aria-hidden', 'true');
+          }
+        });
+      } else if (window.dashboardIntegration && typeof window.dashboardIntegration.showPanelFor === 'function') {
+        // call integration hook if panels are managed there
+        try { window.dashboardIntegration.showPanelFor(name); } catch (e) { /* ignore */ }
+      } else {
+        // default hook: log
+        console.log('Activated tab:', name);
+      }
     }
 
-    // PWA Install Prompt
-    setupInstallPrompt() {
-        let deferredPrompt;
-        const installPrompt = document.getElementById('install-prompt');
-        const installButton = document.getElementById('install-button');
-        const dismissButton = document.getElementById('dismiss-button');
+    function activateTabByName(name) {
+      if (!name) return;
+      const normalized = (name || '').trim().toLowerCase();
+      const target = tabs.find(t => ((t.dataset.tab || t.textContent || '').trim().toLowerCase() === normalized));
+      if (target) activateTab(target);
+    }
 
-        window.addEventListener('beforeinstallprompt', (e) => {
+    // Initialize active tab from hash -> localStorage -> first tab
+    function initActiveTab() {
+      let nameFromHash = null;
+      try {
+        if (location.hash) {
+          const h = location.hash.replace(/^#/, '');
+          const m = h.match(/(?:^|&)tab=([^&]+)/);
+          if (m) nameFromHash = decodeURIComponent(m[1]);
+        }
+      } catch (e) { /* ignore */ }
+
+      const stored = (() => {
+        try { return localStorage.getItem(STORAGE_KEY); } catch (e) { return null; }
+      })();
+
+      if (nameFromHash) {
+        activateTabByName(nameFromHash);
+      } else if (stored) {
+        activateTabByName(stored);
+      } else {
+        activateTab(tabs[0], { focus: false });
+      }
+    }
+
+    // Click handler for tabs
+    function onTabClick(e) {
+      const t = e.currentTarget;
+      activateTab(t);
+      const name = (t.dataset.tab || t.textContent || '').trim();
+      if (name === 'Inbox' && inboxBadge) {
+        inboxBadge.style.display = 'none';
+      }
+
+      // Optionally route or open pages:
+      // if (name === 'Customers') { location.href = '/customers.html'; }
+    }
+
+    // Key handling on each tab for Enter/Space activation + Arrow/Home/End
+    function onTabKeyDown(e) {
+      const key = e.key;
+      const currentIndex = tabs.indexOf(e.currentTarget);
+
+      if (key === 'Enter' || key === ' ') {
+        e.preventDefault();
+        activateTab(e.currentTarget);
+        return;
+      }
+      if (key === 'ArrowRight') {
+        e.preventDefault();
+        const next = (currentIndex + 1) % tabs.length;
+        tabs[next].focus();
+        return;
+      }
+      if (key === 'ArrowLeft') {
+        e.preventDefault();
+        const prev = (currentIndex - 1 + tabs.length) % tabs.length;
+        tabs[prev].focus();
+        return;
+      }
+      if (key === 'Home') {
+        e.preventDefault();
+        tabs[0].focus();
+        return;
+      }
+      if (key === 'End') {
+        e.preventDefault();
+        tabs[tabs.length - 1].focus();
+        return;
+      }
+    }
+
+    function attachTabListeners() {
+      tabs.forEach(t => {
+        t.setAttribute('tabindex', t.classList.contains('active') ? '0' : '-1');
+        t.addEventListener('click', onTabClick);
+        t.addEventListener('keydown', onTabKeyDown);
+      });
+
+      // When focus moves inside the tablist, make the focused tab tabbable
+      tablist.addEventListener('focusin', (e) => {
+        const focusedTab = e.target.closest('.tab');
+        if (!focusedTab) return;
+        tabs.forEach(t => t.setAttribute('tabindex', t === focusedTab ? '0' : '-1'));
+      });
+
+      // Fallback navigation when focus may be on the tablist itself
+      tablist.addEventListener('keydown', (e) => {
+        const key = e.key;
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) {
+          const activeIndex = tabs.findIndex(t => t.classList.contains('active'));
+          if (key === 'ArrowRight') {
             e.preventDefault();
-            deferredPrompt = e;
-            if (installPrompt) {
-                installPrompt.style.display = 'block';
-            }
-        });
-
-        if (installButton) {
-            installButton.addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`Install prompt outcome: ${outcome}`);
-                    deferredPrompt = null;
-                    if (installPrompt) {
-                        installPrompt.style.display = 'none';
-                    }
-                }
-            });
+            const next = (activeIndex + 1) % tabs.length;
+            tabs[next].focus();
+          } else if (key === 'ArrowLeft') {
+            e.preventDefault();
+            const prev = (activeIndex - 1 + tabs.length) % tabs.length;
+            tabs[prev].focus();
+          } else if (key === 'Home') {
+            e.preventDefault();
+            tabs[0].focus();
+          } else if (key === 'End') {
+            e.preventDefault();
+            tabs[tabs.length - 1].focus();
+          }
         }
-
-        if (dismissButton) {
-            dismissButton.addEventListener('click', () => {
-                if (installPrompt) {
-                    installPrompt.style.display = 'none';
-                }
-            });
-        }
-
-        // Hide install prompt if already installed
-        window.addEventListener('appinstalled', () => {
-            console.log('PWA was installed');
-            if (installPrompt) {
-                installPrompt.style.display = 'none';
-            }
-        });
+      });
     }
 
-    // Online/Offline Status
-    setupOnlineStatus() {
-        const statusElement = document.getElementById('connection-status');
-        const statusDot = document.getElementById('status-dot');
-        const statusText = document.getElementById('status-text');
-
-        const updateStatus = () => {
-            if (navigator.onLine) {
-                if (statusDot) {
-                    statusDot.className = 'status-dot online';
-                }
-                if (statusText) {
-                    statusText.textContent = 'Online';
-                }
-                if (statusElement) {
-                    statusElement.className = 'status-indicator online';
-                }
-            } else {
-                if (statusDot) {
-                    statusDot.className = 'status-dot offline';
-                }
-                if (statusText) {
-                    statusText.textContent = 'Offline';
-                }
-                if (statusElement) {
-                    statusElement.className = 'status-indicator offline';
-                }
-                this.showOfflineNotification();
-            }
-        };
-
-        window.addEventListener('online', updateStatus);
-        window.addEventListener('offline', updateStatus);
-        updateStatus(); // Initial check
-    }
-
-    // Dashboard Features
-    setupDashboardFeatures() {
-        // Add click handlers for dashboard cards
-        const dashboardCards = document.querySelectorAll('.dashboard-card');
-        dashboardCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const cardTitle = card.querySelector('h3, h5')?.textContent;
-                this.handleCardClick(cardTitle);
-            });
-        });
-
-        // Add keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeModals();
-            }
-        });
-    }
-
-    handleCardClick(cardTitle) {
-        console.log(`Dashboard card clicked: ${cardTitle}`);
-        // Here you would implement navigation to specific dashboard sections
-        // For demo purposes, we'll just show an alert
-        this.showNotification(`Opening ${cardTitle}...`, 'info');
-    }
-
-    // Notification System
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <div class="notification-content">
-                <span>${message}</span>
-                <button class="notification-close">&times;</button>
-            </div>
-        `;
-
-        // Add styles
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#007ACC'};
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            max-width: 300px;
-            animation: slideIn 0.3s ease;
-        `;
-
-        document.body.appendChild(notification);
-
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            this.removeNotification(notification);
-        }, 5000);
-
-        // Close button handler
-        const closeBtn = notification.querySelector('.notification-close');
-        closeBtn.addEventListener('click', () => {
-            this.removeNotification(notification);
-        });
-    }
-
-    removeNotification(notification) {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }
-
-    showUpdateNotification() {
-        this.showNotification('A new version is available! Refresh to update.', 'info');
-    }
-
-    showOfflineNotification() {
-        this.showNotification('You are now offline. Some features may be limited.', 'warning');
-    }
-
-    closeModals() {
-        // Close any open modals or overlays
-        const modals = document.querySelectorAll('.modal, .overlay');
-        modals.forEach(modal => {
-            modal.style.display = 'none';
-        });
-    }
-
-    // Utility Methods
-    static formatDate(date) {
-        return new Intl.DateTimeFormat('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(date);
-    }
-
-    static debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-}
-
-// Add CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-
-    @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-
-    .notification-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .notification-close {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-        padding: 0;
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .notification-close:hover {
-        opacity: 0.8;
-    }
-`;
-document.head.appendChild(style);
-
-// Initialize the dashboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new A1Dashboard();
-});
-
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = A1Dashboard;
-}
-
-
-// Enhanced Dashboard Integration
-class DashboardIntegration {
-    constructor() {
-        this.customerSystemUrl = 'https://johnniesue.github.io/a1apsvc-dashboard-customers/';
-        this.init();
-    }
-
-    init() {
-        this.setupDashboardCards();
-        this.setupQuickActions();
-        this.checkSystemStatus();
-    }
-
-    setupDashboardCards() {
-        // Add enhanced click handlers for dashboard cards
-        const customerCard = document.querySelector('[onclick*="a1apsvc-dashboard-customers"]');
-        if (customerCard) {
-            customerCard.classList.add('active');
-            
-            // Add enhanced click feedback
-            customerCard.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.openCustomerSystem();
-            });
-
-            // Add keyboard support
-            customerCard.setAttribute('tabindex', '0');
-            customerCard.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    this.openCustomerSystem();
-                }
-            });
-        }
-
-        // Add coming soon handlers for other cards
-        const comingSoonCards = document.querySelectorAll('.dashboard-card:not(.active)');
-        comingSoonCards.forEach(card => {
-            card.classList.add('coming-soon');
-            card.addEventListener('click', (e) => {
-                e.preventDefault();
-                const cardTitle = card.querySelector('h5')?.textContent || 'Feature';
-                this.showComingSoonMessage(cardTitle);
-            });
-        });
-    }
-
-    openCustomerSystem() {
-        // Show loading feedback
-        this.showNotification('Opening Customer Management System...', 'info');
-        
-        // Add visual feedback
-        const customerCard = document.querySelector('[onclick*="a1apsvc-dashboard-customers"]');
-        if (customerCard) {
-            customerCard.style.transform = 'scale(0.98)';
-            setTimeout(() => {
-                customerCard.style.transform = '';
-            }, 150);
-        }
-
-        // Open in new tab with focus
-        const newWindow = window.open(this.customerSystemUrl, '_blank');
-        if (newWindow) {
-            newWindow.focus();
+    // Debounced search example (replace with your search implementation)
+    if (searchInput) {
+      const doSearch = debounce((value) => {
+        if (window.dashboardIntegration && typeof window.dashboardIntegration.filterDashboard === 'function') {
+          try { window.dashboardIntegration.filterDashboard(value); } catch (e) { console.debug(e); }
         } else {
-            this.showNotification('Please allow popups to open the Customer Management System', 'warning');
+          console.log('Search term (debounced):', value);
         }
-    }
+      }, 300);
 
-    showComingSoonMessage(featureName) {
-        const cleanName = featureName.replace(/[^\w\s]/gi, '').trim();
-        this.showNotification(`${cleanName} is coming soon! Currently available: Customer Management System`, 'info');
-    }
-
-    setupQuickActions() {
-        // Add quick action buttons to the dashboard
-        const quickAccessDiv = document.querySelector('.quick-access') || 
-                              document.querySelector('[style*="background-color: #e7f3ff"]');
-        
-        if (quickAccessDiv) {
-            const actionsHTML = `
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
-                    <h5 style="margin: 0 0 15px 0; color: #007ACC;">🚀 Quick Actions</h5>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="quick-action-btn" onclick="dashboardIntegration.openCustomerSystem()" 
-                                style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
-                            👥 Open Customer System
-                        </button>
-                        <button class="quick-action-btn" onclick="dashboardIntegration.showSystemStatus()" 
-                                style="padding: 8px 16px; background: #007ACC; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
-                            📊 System Status
-                        </button>
-                        <button class="quick-action-btn" onclick="dashboardIntegration.showHelp()" 
-                                style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
-                            ❓ Help
-                        </button>
-                    </div>
-                </div>
-            `;
-            quickAccessDiv.insertAdjacentHTML('beforeend', actionsHTML);
-
-            // Add hover effects to quick action buttons
-            const quickBtns = quickAccessDiv.querySelectorAll('.quick-action-btn');
-            quickBtns.forEach(btn => {
-                btn.addEventListener('mouseenter', () => {
-                    btn.style.transform = 'translateY(-1px)';
-                    btn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-                });
-                btn.addEventListener('mouseleave', () => {
-                    btn.style.transform = '';
-                    btn.style.boxShadow = '';
-                });
-            });
+      searchInput.addEventListener('input', (e) => doSearch(e.target.value));
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          // trigger immediate search
+          if (window.dashboardIntegration && typeof window.dashboardIntegration.filterDashboard === 'function') {
+            try { window.dashboardIntegration.filterDashboard(searchInput.value); } catch (err) { console.debug(err); }
+          } else {
+            console.log('Search (enter):', searchInput.value);
+          }
         }
+      });
     }
 
-    async checkSystemStatus() {
-        try {
-            // Check if customer system is accessible
-            const response = await fetch(this.customerSystemUrl, { mode: 'no-cors' });
-            this.updateSystemStatus('Customer Management', 'online');
-        } catch (error) {
-            this.updateSystemStatus('Customer Management', 'offline');
-        }
-    }
-
-    updateSystemStatus(systemName, status) {
-        const statusElement = document.querySelector(`[data-system="${systemName}"]`);
-        if (statusElement) {
-            statusElement.textContent = status === 'online' ? '✅ Online' : '❌ Offline';
-            statusElement.style.color = status === 'online' ? '#28a745' : '#dc3545';
-        }
-    }
-
-    showSystemStatus() {
-        const statusInfo = `
-            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                <h4 style="margin: 0 0 15px 0; color: #007ACC;">🔧 A-1APSVC System Status</h4>
-                <div style="margin: 10px 0;">
-                    <strong>Main Dashboard PWA:</strong> <span style="color: #28a745;">✅ Active</span>
-                </div>
-                <div style="margin: 10px 0;">
-                    <strong>Customer Management:</strong> <span style="color: #28a745;">✅ Active</span>
-                </div>
-                <div style="margin: 10px 0;">
-                    <strong>Service Requests:</strong> <span style="color: #6c757d;">⏳ Coming Soon</span>
-                </div>
-                <div style="margin: 10px 0;">
-                    <strong>Scheduling:</strong> <span style="color: #6c757d;">⏳ Coming Soon</span>
-                </div>
-                <div style="margin: 10px 0;">
-                    <strong>Reports:</strong> <span style="color: #6c757d;">⏳ Coming Soon</span>
-                </div>
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 0.9em; color: #666;">
-                    Last updated: ${new Date().toLocaleString()}
-                </div>
-            </div>
-        `;
-        this.showNotification(statusInfo, 'info');
-    }
-
-    showHelp() {
-        const helpInfo = `
-            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 400px;">
-                <h4 style="margin: 0 0 15px 0; color: #007ACC;">📚 A-1APSVC Dashboard Help</h4>
-                <div style="margin: 10px 0;">
-                    <strong>Customer Management:</strong><br>
-                    Click the green "Customer Management" card to access your full customer and job tracking system.
-                </div>
-                <div style="margin: 10px 0;">
-                    <strong>PWA Features:</strong><br>
-                    • Install as app on your device<br>
-                    • Works offline<br>
-                    • Fast loading with caching
-                </div>
-                <div style="margin: 10px 0;">
-                    <strong>Mobile Use:</strong><br>
-                    Optimized for field technicians on mobile devices.
-                </div>
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                    <strong>Support:</strong> 469-900-5194<br>
-                    <strong>Email:</strong> johnniesue@a-1apsvc.com
-                </div>
-            </div>
-        `;
-        this.showNotification(helpInfo, 'info');
-    }
-
-    showNotification(message, type = 'info') {
-        // Use the existing notification system from A1Dashboard
-        if (window.a1Dashboard && window.a1Dashboard.showNotification) {
-            window.a1Dashboard.showNotification(message, type);
+    // Inbox count fetch example (placeholder) — replace INBOX_COUNT_ENDPOINT with your endpoint or Firebase hook
+    async function fetchInboxCount() {
+      if (!inboxBadge || !INBOX_COUNT_ENDPOINT) return;
+      try {
+        const res = await fetch(INBOX_COUNT_ENDPOINT, { cache: 'no-cache' });
+        if (!res.ok) throw new Error('Network response not ok');
+        const json = await res.json();
+        const count = Number(json.count || 0);
+        if (count > 0) {
+          inboxBadge.textContent = String(count);
+          inboxBadge.style.display = '';
         } else {
-            // Fallback notification
-            console.log(`${type.toUpperCase()}: ${message}`);
+          inboxBadge.style.display = 'none';
         }
+      } catch (err) {
+        console.debug('fetchInboxCount failed', err);
+      }
     }
-}
 
-// Initialize dashboard integration
-document.addEventListener('DOMContentLoaded', () => {
-    window.dashboardIntegration = new DashboardIntegration();
-});
+    // refreshTabs for dynamic content
+    function refreshTabs() {
+      tabs.forEach(t => {
+        t.removeEventListener('click', onTabClick);
+        t.removeEventListener('keydown', onTabKeyDown);
+      });
+      tabs = Array.from(document.querySelectorAll('.tab'));
+      attachTabListeners();
+    }
 
+    // Init behavior
+    attachTabListeners();
+    initActiveTab();
+
+    // optional inbox polling
+    if (INBOX_COUNT_ENDPOINT) {
+      fetchInboxCount();
+      setInterval(fetchInboxCount, INBOX_POLL_MS);
+    }
+
+    // Public API
+    window.a1Tabs = {
+      activateTabByName,
+      refreshTabs,
+      fetchInboxCount,
+      activateTab: (nameOrElement) => {
+        if (!nameOrElement) return;
+        if (typeof nameOrElement === 'string') return activateTabByName(nameOrElement);
+        if (nameOrElement instanceof Element) return activateTab(nameOrElement);
+      }
+    };
+
+    // Wire New button to dashboard notification or your create flow
+    if (newBtn) {
+      newBtn.addEventListener('click', () => {
+        if (window.a1Dashboard && typeof window.a1Dashboard.showNotification === 'function') {
+          window.a1Dashboard.showNotification('Create a new item (implement your flow).', 'info');
+        } else {
+          alert('Create a new item (implement your flow).');
+        }
+      });
+    }
+
+    // Expose openApps as before
+    window.openApps = function () {
+      if (window.dashboardIntegration && typeof window.dashboardIntegration.openApps === 'function') {
+        try { return window.dashboardIntegration.openApps(); } catch (e) { /* ignore */ }
+      }
+      alert('Open apps menu (implement as needed).');
+    };
+
+    console.log('header-behavior initialized');
+  });
+})();
