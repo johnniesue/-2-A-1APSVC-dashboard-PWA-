@@ -1,1055 +1,444 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A-1APSVC Dashboard PWA</title>
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="/style.css">
-    
-    <!-- Theme color for mobile browsers -->
-    <meta name="theme-color" content="#007ACC">
-    
-    <!-- Apple touch icon -->
-    <link rel="apple-touch-icon" href="/images/icon-192.png">
-    
-    <style>
-        /* base body */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f8fafc;
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-            -webkit-font-smoothing:antialiased;
-            -moz-osx-font-smoothing:grayscale;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>A-1APSVC Dashboard PWA</title>
 
-        /* ---------- Header (merged: original top + integrated tab row) ---------- */
-        .header {
-            background: linear-gradient(135deg, #007ACC 0%, #0056b3 100%);
-            color: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/style.css">
 
-        /* layout for both header rows */
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+  <!-- Theme color for mobile browsers -->
+  <meta name="theme-color" content="#007ACC">
 
-        /* top row: logo + status (keeps your original look) */
-        .header-top {
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:12px;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .company-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0;
-        }
-        
-        .company-subtitle {
-            font-size: 0.875rem;
-            opacity: 0.9;
-            margin: 0;
-        }
-        
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-        }
-        
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* bottom row: integrated tabs, search, right controls */
-        .header-bottom {
-            display:flex;
-            align-items:center;
-            width:100%;
-            gap:12px;
-        }
-        .hb-left { flex:1; min-width:0; overflow:hidden; }
-        .hb-center { flex:0 1 480px; display:flex; justify-content:center; }
-        .hb-right { display:flex; align-items:center; gap:10px; flex:0; }
-
-        /* Tabs */
-        .tabs {
-            display:flex;
-            gap:10px;
-            align-items:center;
-            overflow:auto;
-            padding-bottom:4px;
-            -webkit-overflow-scrolling: touch;
-            white-space:nowrap;
-        }
-        .tab {
-            background:transparent;
-            color:rgba(255,255,255,0.85);
-            border:0;
-            padding:8px 6px;
-            font-weight:600;
-            cursor:pointer;
-            position:relative;
-            border-radius:6px;
-            display:inline-flex;
-            align-items:center;
-            gap:6px;
-            font-size:14px;
-        }
-        .tab:focus { outline:2px solid rgba(255,255,255,0.08); outline-offset:3px; }
-        .tab.active { color: #fff; }
-        .tab.active::after {
-            content: "";
-            position:absolute;
-            left:6px;
-            right:6px;
-            bottom:-8px;
-            height:3px;
-            background:#fff;
-            border-radius:3px;
-        }
-
-        .badge {
-            display:inline-block;
-            background:#1ea7ff;
-            color:white;
-            font-size:11px;
-            padding:2px 6px;
-            border-radius:999px;
-            margin-left:6px;
-            line-height:1;
-        }
-
-        /* Search */
-        .search {
-            display:flex;
-            align-items:center;
-            gap:8px;
-            background: rgba(255,255,255,0.06);
-            padding:6px 10px;
-            border-radius:8px;
-            width:100%;
-            max-width:480px;
-        }
-        .search input {
-            background:transparent;
-            border:0;
-            color:white;
-            outline:none;
-            width:100%;
-            font-size:14px;
-        }
-        .search .search-icon { width:18px; height:18px; color:rgba(255,255,255,0.8); flex:0 0 18px; }
-
-        /* Right controls */
-        .btn-new {
-            background:transparent;
-            border:1px solid rgba(255,255,255,0.12);
-            color:white;
-            padding:6px 12px;
-            border-radius:18px;
-            font-weight:600;
-            cursor:pointer;
-        }
-        .icon-btn {
-            background:transparent;
-            border:0;
-            color:rgba(255,255,255,0.85);
-            padding:8px;
-            border-radius:8px;
-            cursor:pointer;
-        }
-        .icon-btn:hover { background: rgba(255,255,255,0.03); color: #fff; }
-        .avatar {
-            width:36px; height:36px; border-radius:50%; background:#f08d4a; display:flex; align-items:center; justify-content:center; color:white; font-weight:700;
-        }
-
-        /* ---------- Rest of the dashboard CSS (original) ---------- */
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        
-        .welcome-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .welcome-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .welcome-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .date-time {
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-        
-        .welcome-subtitle {
-            color: #64748b;
-            margin: 0;
-        }
-        
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .metric-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .metric-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--accent-color, #007ACC);
-        }
-        
-        .metric-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-        }
-        
-        .metric-icon {
-            font-size: 1.5rem;
-            opacity: 0.7;
-        }
-        
-        .metric-trend {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
-            font-weight: 500;
-        }
-        
-        .trend-up {
-            background: #dcfce7;
-            color: #166534;
-        }
-        
-        .trend-down {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        
-        .metric-title {
-            font-size: 0.875rem;
-            color: #64748b;
-            text-transform: uppercase;
-            font-weight: 500;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
-        }
-        
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 0.25rem;
-        }
-        
-        .metric-subtitle {
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-        
-        .performance-section {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 2rem;
-        }
-        
-        .performance-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .performance-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-        
-        .performance-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            text-align: center;
-        }
-        
-        .performance-item {
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .performance-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 0.25rem;
-        }
-        
-        .performance-label {
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-        
-        .sections-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .section-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-            padding: 1.5rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .section-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .section-card.active {
-            border-color: #10b981;
-            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
-        }
-        
-        .section-header {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .section-icon {
-            font-size: 2rem;
-            flex-shrink: 0;
-        }
-        
-        .section-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 0.25rem;
-        }
-        
-        .section-description {
-            font-size: 0.875rem;
-            color: #64748b;
-            line-height: 1.5;
-        }
-        
-        .section-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        
-        .status-active {
-            background: #dcfce7;
-            color: #166534;
-        }
-        
-        .status-available {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
-        .status-coming-soon {
-            background: #fef3c7;
-            color: #d97706;
-        }
-        
-        .quick-actions {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 2rem;
-        }
-        
-        .quick-actions-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .quick-actions-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-        
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-        
-        .action-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        
-        .btn-primary {
-            background: #007ACC;
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #10b981;
-            color: white;
-        }
-        
-        .btn-tertiary {
-            background: #64748b;
-            color: white;
-        }
-        
-        .service-area-section {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 2rem;
-        }
-        
-        .service-area-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .service-area-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-        
-        .map-placeholder {
-            width: 100%;
-            height: 300px;
-            background: #f1f5f9;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #64748b;
-            font-size: 0.875rem;
-            border: 2px dashed #cbd5e1;
-        }
-        
-        .system-status {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .status-card {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .status-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-        }
-        
-        .status-connected {
-            background: #dcfce7;
-            color: #166534;
-        }
-        
-        .status-ready {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
-        .status-protected {
-            background: #fef3c7;
-            color: #d97706;
-        }
-        
-        .status-info h4 {
-            margin: 0 0 0.25rem 0;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-        
-        .status-info p {
-            margin: 0;
-            font-size: 0.75rem;
-            color: #64748b;
-        }
-        
-        /* responsive */
-        @media (max-width: 920px) {
-            .hb-center { display:none; } /* hide search on narrow screens */
-        }
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 1rem;
-            }
-            
-            .header-content {
-                gap: 8px;
-            }
-            
-            .metrics-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .sections-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .actions-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        @media (max-width: 560px) {
-            .tabs { gap:6px; }
-            .tab { padding:6px 4px; font-size:13px; }
-            .btn-new { display:none; }
-        }
-    </style>
+  <!-- Apple touch icon -->
+  <link rel="apple-touch-icon" href="/images/icon-192.png">
 </head>
 <body>
-    <!-- Integrated header: top row (logo/status) + bottom row (tabs/search/controls) -->
-    <header class="header" role="banner">
-        <div class="header-content">
-            <!-- top row: original logo + status -->
-            <div class="header-top">
-                <div class="logo-section">
-                    <div>
-                        <h1 class="company-title">A-1APSVC Dashboard</h1>
-                        <p class="company-subtitle">Professional Service Management</p>
-                    </div>
-                </div>
-                <div class="status-indicator">
-                    <div class="status-dot" aria-hidden="true"></div>
-                    <span>Online</span>
-                </div>
-            </div>
-
-            <!-- bottom row: integrated tab bar -->
-            <div class="header-bottom" role="navigation" aria-label="Primary navigation">
-                <div class="hb-left">
-                    <nav class="tabs" role="tablist" aria-label="Main">
-                        <button class="tab active" role="tab" aria-selected="true" data-tab="Home">Home</button>
-                        <button class="tab" role="tab" aria-selected="false" data-tab="Dash">Dash</button>
-                        <button class="tab" role="tab" aria-selected="false" data-tab="Inbox">
-                            Inbox
-                            <span class="badge" id="inboxBadge" aria-hidden="true">1</span>
-                        </button>
-                        <button class="tab" role="tab" aria-selected="false" data-tab="Schedule">Schedule</button>
-                        <button class="tab" role="tab" aria-selected="false" data-tab="Customers">Customers</button>
-                        <button class="tab" role="tab" aria-selected="false" data-tab="My money">My money</button>
-                        <button class="tab" role="tab" aria-selected="false" data-tab="Payroll">Payroll</button>
-                        <button class="tab" role="tab" aria-selected="false" data-tab="Reporting">Reporting</button>
-                        <button class="tab" role="tab" aria-selected="false" data-tab="Marketing">Marketing</button>
-                        <button class="tab" role="tab" aria-selected="false" data-tab="Price book">Price book</button>
-                        <button class="tab" role="tab" aria-selected="false" data-tab="Pipeline">Pipeline</button>
-                    </nav>
-                </div>
-
-                <div class="hb-center" aria-hidden="false">
-                    <div class="search" role="search" aria-label="Site search">
-                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        <input id="globalSearch" type="search" placeholder="Search" aria-label="Search the dashboard" />
-                    </div>
-                </div>
-
-                <div class="hb-right">
-                    <button class="btn-new" id="newBtn">New</button>
-
-                    <button class="icon-btn" title="Notifications" aria-label="Notifications" id="notifyBtn">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zM18 16v-5a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-
-                    <button class="icon-btn" title="Apps" aria-label="Apps" id="appsBtn" onclick="openApps()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
-                            <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
-                            <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
-                            <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
-                        </svg>
-                    </button>
-
-                    <div class="avatar" title="You" aria-hidden="true">CC</div>
-                </div>
-            </div>
+  <!-- Integrated header: top row (logo/status) + bottom row (tabs/search/controls) -->
+  <header class="header" role="banner">
+    <div class="header-content">
+      <!-- top row: original logo + status -->
+      <div class="header-top">
+        <div class="logo-section">
+          <div>
+            <h1 class="company-title">A-1APSVC Dashboard</h1>
+            <p class="company-subtitle">Professional Service Management</p>
+          </div>
         </div>
-    </header>
+        <div class="status-indicator">
+          <div class="status-dot" aria-hidden="true"></div>
+          <span>Online</span>
+        </div>
+      </div>
 
-    <main class="main-container">
-        <div class="welcome-section">
-            <div class="welcome-header">
-                <h2 class="welcome-title">
-                    👋 Hi, Chris
-                </h2>
-                <div class="date-time" id="currentDateTime" aria-live="polite"></div>
-            </div>
-            <p class="welcome-subtitle">Here's what's happening with your business today</p>
+      <!-- bottom row: integrated tab bar -->
+      <div class="header-bottom" role="navigation" aria-label="Primary navigation">
+        <div class="hb-left">
+          <nav class="tabs" role="tablist" aria-label="Main">
+            <button class="tab active" role="tab" aria-selected="true" data-tab="Home">Home</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="Dash">Dash</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="Inbox">
+              Inbox
+              <span class="badge" id="inboxBadge" aria-hidden="true">1</span>
+            </button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="Schedule">Schedule</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="Customers">Customers</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="My money">My money</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="Payroll">Payroll</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="Reporting">Reporting</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="Marketing">Marketing</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="Price book">Price book</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="Pipeline">Pipeline</button>
+          </nav>
         </div>
 
-        <div class="metrics-grid">
-            <div class="metric-card" style="--accent-color: #3b82f6;">
-                <div class="metric-header">
-                    <div class="metric-icon">📋</div>
-                    <div class="metric-trend trend-up">+15%</div>
-                </div>
-                <div class="metric-title">Open Estimates</div>
-                <div class="metric-value">68</div>
-                <div class="metric-subtitle">$326,998.07 total value</div>
-            </div>
-            
-            <div class="metric-card" style="--accent-color: #10b981;">
-                <div class="metric-header">
-                    <div class="metric-icon">💰</div>
-                    <div class="metric-trend trend-up">+8%</div>
-                </div>
-                <div class="metric-title">Open Invoices</div>
-                <div class="metric-value">33</div>
-                <div class="metric-subtitle">$46,203.67 outstanding</div>
-            </div>
-            
-            <div class="metric-card" style="--accent-color: #f59e0b;">
-                <div class="metric-header">
-                    <div class="metric-icon">🔧</div>
-                    <div class="metric-trend trend-up">+12%</div>
-                </div>
-                <div class="metric-title">Unscheduled Jobs</div>
-                <div class="metric-value">274</div>
-                <div class="metric-subtitle">$265,558.37 potential</div>
-            </div>
-            
-            <div class="metric-card" style="--accent-color: #8b5cf6;">
-                <div class="metric-header">
-                    <div class="metric-icon">📅</div>
-                    <div class="metric-trend trend-down">Today</div>
-                </div>
-                <div class="metric-title">Upcoming Visits</div>
-                <div class="metric-value">0</div>
-                <div class="metric-subtitle">Unscheduled service visits</div>
-            </div>
+        <div class="hb-center" aria-hidden="false">
+          <div class="search" role="search" aria-label="Site search">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"
+                    stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <input id="globalSearch" type="search" placeholder="Search" aria-label="Search the dashboard" />
+          </div>
         </div>
 
-        <div class="performance-section">
-            <div class="performance-header">
-                <span>📊</span>
-                <h3 class="performance-title">Today's Performance</h3>
-            </div>
-            <div class="performance-grid">
-                <div class="performance-item">
-                    <div class="performance-value">$0</div>
-                    <div class="performance-label">Revenue Earned</div>
-                </div>
-                <div class="performance-item">
-                    <div class="performance-value">0</div>
-                    <div class="performance-label">Jobs Completed</div>
-                </div>
-                <div class="performance-item">
-                    <div class="performance-value">$0</div>
-                    <div class="performance-label">Average Job Size</div>
-                </div>
-                <div class="performance-item">
-                    <div class="performance-value">2</div>
-                    <div class="performance-label">Active Technicians</div>
-                </div>
-            </div>
+        <div class="hb-right">
+          <button class="btn-new" id="newBtn">New</button>
+
+          <button class="icon-btn" title="Notifications" aria-label="Notifications" id="notifyBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zM18 16v-5a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z"
+                    stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <button class="icon-btn" title="Apps" aria-label="Apps" id="appsBtn" onclick="openApps()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            </svg>
+          </button>
+
+          <div class="avatar" title="You" aria-hidden="true">CC</div>
         </div>
+      </div>
+    </div>
+  </header>
 
-        <div class="sections-grid">
-            <div class="section-card active" onclick="window.open('https://johnniesue.github.io/a1apsvc-dashboard-customers/', '_blank')">
-                <div class="section-header">
-                    <div class="section-icon">👥</div>
-                    <div>
-                        <div class="section-title">Customer Management</div>
-                        <div class="section-description">Manage customer data, job tracking, and service history</div>
-                    </div>
-                </div>
-                <div class="section-status status-active">✅ Active System</div>
-            </div>
+  <main class="main-container">
+    <!-- (all your existing main content - unchanged) -->
+    <div class="welcome-section">
+      <div class="welcome-header">
+        <h2 class="welcome-title">👋 Hi, Chris</h2>
+        <div class="date-time" id="currentDateTime" aria-live="polite"></div>
+      </div>
+      <p class="welcome-subtitle">Here's what's happening with your business today</p>
+    </div>
 
-            <div class="section-card" onclick="window.open('schedule.html', '_blank')">
-                <div class="section-header">
-                    <div class="section-icon">📅</div>
-                    <div>
-                        <div class="section-title">Scheduling</div>
-                        <div class="section-description">Calendar management and appointment scheduling</div>
-                    </div>
-                </div>
-                <div class="section-status status-available">✅ Available</div>
-            </div>
-
-            <div class="section-card" onclick="window.open('reports.html', '_blank')">
-                <div class="section-header">
-                    <div class="section-icon">📊</div>
-                    <div>
-                        <div class="section-title">Financial Reports</div>
-                        <div class="section-description">Revenue analytics and business intelligence</div>
-                    </div>
-                </div>
-                <div class="section-status status-available">✅ Available</div>
-            </div>
-
-            <div class="section-card" onclick="showComingSoon('Service Requests')">
-                <div class="section-header">
-                    <div class="section-icon">🔧</div>
-                    <div>
-                        <div class="section-title">Service Requests</div>
-                        <div class="section-description">Track and manage plumbing service requests</div>
-                    </div>
-                </div>
-                <div class="section-status status-coming-soon">⏳ Coming Soon</div>
-            </div>
+    <div class="metrics-grid">
+      <div class="metric-card" style="--accent-color: #3b82f6;">
+        <div class="metric-header">
+          <div class="metric-icon">📋</div>
+          <div class="metric-trend trend-up">+15%</div>
         </div>
+        <div class="metric-title">Open Estimates</div>
+        <div class="metric-value">68</div>
+        <div class="metric-subtitle">$326,998.07 total value</div>
+      </div>
 
-        <div class="quick-actions">
-            <div class="quick-actions-header">
-                <span>🚀</span>
-                <h3 class="quick-actions-title">Quick Actions for Techs</h3>
-            </div>
-            <div class="actions-grid">
-                <a href="https://johnniesue.github.io/a1apsvc-dashboard-customers/" class="action-btn btn-primary">
-                    <span>📋</span>
-                    Open Customer System
-                </a>
-                <button class="action-btn btn-secondary" onclick="updateStatus('scheduled')">
-                    <span>✅</span>
-                    Mark Scheduled
-                </button>
-                <button class="action-btn btn-secondary" onclick="updateStatus('enroute')">
-                    <span>🚗</span>
-                    I'm En Route
-                </button>
-                <button class="action-btn btn-tertiary" onclick="updateStatus('started')">
-                    <span>🔧</span>
-                    Job Started
-                </button>
-                <button class="action-btn btn-tertiary" onclick="updateStatus('complete')">
-                    <span>✅</span>
-                    Job Complete
-                </button>
-                <button class="action-btn btn-tertiary" onclick="showHelp()">
-                    <span>❓</span>
-                    Help & Support
-                </button>
-            </div>
+      <div class="metric-card" style="--accent-color: #10b981;">
+        <div class="metric-header">
+          <div class="metric-icon">💰</div>
+          <div class="metric-trend trend-up">+8%</div>
         </div>
+        <div class="metric-title">Open Invoices</div>
+        <div class="metric-value">33</div>
+        <div class="metric-subtitle">$46,203.67 outstanding</div>
+      </div>
 
-        <div class="service-area-section">
-            <div class="service-area-header">
-                <span>🗺️</span>
-                <h3 class="service-area-title">Service Area Map</h3>
-            </div>
-            <div id="serviceAreaMap" style="width: 100%; height: 300px; border-radius: 8px; border: 1px solid #e2e8f0; position:relative;">
-                <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d429168.10916846283!2d-96.96523!3d33.040417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864c19f77b45974b%3A0xb9ec9ba4f647678f!2sLucas%2C%20TX!5e0!3m2!1sen!2sus!4v1635959999999!5m2!1sen!2sus&zoom=10"
-                    width="100%" 
-                    height="300" 
-                    style="border:0; border-radius: 8px;" 
-                    allowfullscreen="" 
-                    loading="lazy" 
-                    referrerpolicy="no-referrer-when-downgrade">
-                </iframe>
-                <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #64748b;">
-                    📍 Service Areas: Lucas, Allen, McKinney, Plano, Frisco, Wylie, Fairview, Parker
-                </div>
-            </div>
+      <div class="metric-card" style="--accent-color: #f59e0b;">
+        <div class="metric-header">
+          <div class="metric-icon">🔧</div>
+          <div class="metric-trend trend-up">+12%</div>
         </div>
+        <div class="metric-title">Unscheduled Jobs</div>
+        <div class="metric-value">274</div>
+        <div class="metric-subtitle">$265,558.37 potential</div>
+      </div>
 
-        <div class="system-status">
-            <div class="status-card">
-                <div class="status-icon status-connected">🔥</div>
-                <div class="status-info">
-                    <h4>Firebase Status</h4>
-                    <p>Real-time database for customer data</p>
-                </div>
-            </div>
-            
-            <div class="status-card">
-                <div class="status-icon status-ready">📱</div>
-                <div class="status-info">
-                    <h4>Mobile Friendly</h4>
-                    <p>Optimized for field technicians on Android</p>
-                </div>
-            </div>
-            
-            <div class="status-card">
-                <div class="status-icon status-protected">🔒</div>
-                <div class="status-info">
-                    <h4>Data Security</h4>
-                    <p>Customer data is securely stored and protected</p>
-                </div>
-            </div>
-            
-            <div class="status-card">
-                <div class="status-icon status-ready">🗺️</div>
-                <div class="status-info">
-                    <h4>Maps Integration</h4>
-                    <p>Google Maps with service area verification</p>
-                </div>
-            </div>
+      <div class="metric-card" style="--accent-color: #8b5cf6;">
+        <div class="metric-header">
+          <div class="metric-icon">📅</div>
+          <div class="metric-trend trend-down">Today</div>
         </div>
-    </main>
+        <div class="metric-title">Upcoming Visits</div>
+        <div class="metric-value">0</div>
+        <div class="metric-subtitle">Unscheduled service visits</div>
+      </div>
+    </div>
 
-    <!-- External JavaScript -->
-    <script src="/script.js"></script>
-    
-    <!-- PWA Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(registration => console.log('SW registered'))
-                .catch(error => console.log('SW registration failed'));
+    <div class="performance-section">
+      <div class="performance-header">
+        <span>📊</span>
+        <h3 class="performance-title">Today's Performance</h3>
+      </div>
+      <div class="performance-grid">
+        <div class="performance-item">
+          <div class="performance-value">$0</div>
+          <div class="performance-label">Revenue Earned</div>
+        </div>
+        <div class="performance-item">
+          <div class="performance-value">0</div>
+          <div class="performance-label">Jobs Completed</div>
+        </div>
+        <div class="performance-item">
+          <div class="performance-value">$0</div>
+          <div class="performance-label">Average Job Size</div>
+        </div>
+        <div class="performance-item">
+          <div class="performance-value">2</div>
+          <div class="performance-label">Active Technicians</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sections-grid">
+      <div class="section-card active" onclick="window.open('https://johnniesue.github.io/a1apsvc-dashboard-customers/', '_blank')">
+        <div class="section-header">
+          <div class="section-icon">👥</div>
+          <div>
+            <div class="section-title">Customer Management</div>
+            <div class="section-description">Manage customer data, job tracking, and service history</div>
+          </div>
+        </div>
+        <div class="section-status status-active">✅ Active System</div>
+      </div>
+
+      <div class="section-card" onclick="window.open('schedule.html', '_blank')">
+        <div class="section-header">
+          <div class="section-icon">📅</div>
+          <div>
+            <div class="section-title">Scheduling</div>
+            <div class="section-description">Calendar management and appointment scheduling</div>
+          </div>
+        </div>
+        <div class="section-status status-available">✅ Available</div>
+      </div>
+
+      <div class="section-card" onclick="window.open('reports.html', '_blank')">
+        <div class="section-header">
+          <div class="section-icon">📊</div>
+          <div>
+            <div class="section-title">Financial Reports</div>
+            <div class="section-description">Revenue analytics and business intelligence</div>
+          </div>
+        </div>
+        <div class="section-status status-available">✅ Available</div>
+      </div>
+
+      <div class="section-card" onclick="showComingSoon('Service Requests')">
+        <div class="section-header">
+          <div class="section-icon">🔧</div>
+          <div>
+            <div class="section-title">Service Requests</div>
+            <div class="section-description">Track and manage plumbing service requests</div>
+          </div>
+        </div>
+        <div class="section-status status-coming-soon">⏳ Coming Soon</div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <div class="quick-actions-header">
+        <span>🚀</span>
+        <h3 class="quick-actions-title">Quick Actions for Techs</h3>
+      </div>
+      <div class="actions-grid">
+        <a href="https://johnniesue.github.io/a1apsvc-dashboard-customers/" class="action-btn btn-primary">
+          <span>📋</span>
+          Open Customer System
+        </a>
+        <button class="action-btn btn-secondary" onclick="updateStatus('scheduled')">
+          <span>✅</span>
+          Mark Scheduled
+        </button>
+        <button class="action-btn btn-secondary" onclick="updateStatus('enroute')">
+          <span>🚗</span>
+          I'm En Route
+        </button>
+        <button class="action-btn btn-tertiary" onclick="updateStatus('started')">
+          <span>🔧</span>
+          Job Started
+        </button>
+        <button class="action-btn btn-tertiary" onclick="updateStatus('complete')">
+          <span>✅</span>
+          Job Complete
+        </button>
+        <button class="action-btn btn-tertiary" onclick="showHelp()">
+          <span>❓</span>
+          Help & Support
+        </button>
+      </div>
+    </div>
+
+    <div class="service-area-section">
+      <div class="service-area-header">
+        <span>🗺️</span>
+        <h3 class="service-area-title">Service Area Map</h3>
+      </div>
+      <div id="serviceAreaMap" style="width: 100%; height: 300px; border-radius: 8px; border: 1px solid #e2e8f0; position:relative;">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d429168.10916846283!2d-96.96523!3d33.040417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864c19f77b45974b%3A0xb9ec9ba4f647678f!2sLucas%2C%20TX!5e0!3m2!1sen!2sus!4v1635959999999!5m2!1sen!2sus&zoom=10"
+          width="100%"
+          height="300"
+          style="border:0; border-radius: 8px;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+        <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #64748b;">
+          📍 Service Areas: Lucas, Allen, McKinney, Plano, Frisco, Wylie, Fairview, Parker
+        </div>
+      </div>
+    </div>
+
+    <div class="system-status">
+      <div class="status-card">
+        <div class="status-icon status-connected">🔥</div>
+        <div class="status-info">
+          <h4>Firebase Status</h4>
+          <p>Real-time database for customer data</p>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <div class="status-icon status-ready">📱</div>
+        <div class="status-info">
+          <h4>Mobile Friendly</h4>
+          <p>Optimized for field technicians on Android</p>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <div class="status-icon status-protected">🔒</div>
+        <div class="status-info">
+          <h4>Data Security</h4>
+          <p>Customer data is securely stored and protected</p>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <div class="status-icon status-ready">🗺️</div>
+        <div class="status-info">
+          <h4>Maps Integration</h4>
+          <p>Google Maps with service area verification</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- External JavaScript (keep your existing script) -->
+  <script src="/script.js"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => console.log('SW registered'))
+        .catch(error => console.log('SW registration failed'));
+    }
+  </script>
+
+  <!-- Integrated header/tab behavior + other utilities -->
+  <script>
+    (function () {
+      // Tabs behavior (activation + keyboard navigation)
+      const tabs = Array.from(document.querySelectorAll('.tab'));
+      const tablist = document.querySelector('[role="tablist"]');
+
+      function activateTab(targetTab, skipConsole) {
+        tabs.forEach(t => {
+          const isTarget = t === targetTab;
+          t.classList.toggle('active', isTarget);
+          t.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+        });
+        const name = (targetTab && (targetTab.dataset.tab || targetTab.textContent.trim())) || '';
+        if (!skipConsole) console.log('Activated tab:', name);
+        // TODO: wire to routing or show/hide content for each section
+      }
+
+      if (tabs.length) {
+        // click
+        tabs.forEach(t => {
+          t.addEventListener('click', () => {
+            activateTab(t);
+            if ((t.dataset.tab || t.textContent).trim() === 'Inbox') {
+              const b = document.getElementById('inboxBadge');
+              if (b) b.style.display = 'none'; // simple UX: hide badge when clicked
+            }
+          });
+        });
+
+        // keyboard navigation (left/right)
+        tablist && tablist.addEventListener('keydown', (e) => {
+          const key = e.key;
+          const current = tabs.findIndex(t => t.classList.contains('active'));
+          if (key === 'ArrowRight') {
+            e.preventDefault();
+            const next = (current + 1) % tabs.length;
+            activateTab(tabs[next], true);
+            tabs[next].focus();
+          } else if (key === 'ArrowLeft') {
+            e.preventDefault();
+            const prev = (current - 1 + tabs.length) % tabs.length;
+            activateTab(tabs[prev], true);
+            tabs[prev].focus();
+          }
+        });
+      }
+
+      // New button placeholder
+      document.getElementById('newBtn')?.addEventListener('click', () => {
+        alert('Create a new item (wire this to your create flow).');
+      });
+
+      // Apps button placeholder
+      window.openApps = function() {
+        alert('Open apps menu (implement as needed).');
+      };
+
+      // Date/time updater (keeps your original behavior)
+      function updateDateTime() {
+        const now = new Date();
+        const options = {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        };
+        const el = document.getElementById('currentDateTime');
+        if (el) el.textContent = now.toLocaleDateString('en-US', options);
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 60000);
+
+      // Install prompt handling (keeps your original behavior)
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // Show install banner (simple inline)
+        const installBanner = document.createElement('div');
+        installBanner.innerHTML = `
+            <div style="position: fixed; top: 0; left: 0; right: 0; background: #007ACC; color: white; padding: 1rem; text-align: center; z-index: 1200;">
+                <span>📱 Install A-1APSVC Dashboard App for quick access</span>
+                <button id="installNowBtn" style="margin-left: 1rem; background: white; color: #007ACC; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Install App</button>
+                <button id="installLaterBtn" style="margin-left: 0.5rem; background: transparent; color: white; border: 1px solid white; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Later</button>
+            </div>
+        `;
+        document.body.appendChild(installBanner);
+        document.getElementById('installNowBtn')?.addEventListener('click', installApp);
+        document.getElementById('installLaterBtn')?.addEventListener('click', () => installBanner.remove());
+      });
+
+      function installApp() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((result) => {
+            if (result.outcome === 'accepted') {
+              console.log('User accepted the install prompt');
+            }
+            deferredPrompt = null;
+          });
         }
-    </script>
+      }
 
-    <!-- Integrated header/tab behavior + other utilities -->
-    <script>
-        (function () {
-            // Tabs behavior (activation + keyboard navigation)
-            const tabs = Array.from(document.querySelectorAll('.tab'));
-            const tablist = document.querySelector('[role="tablist"]');
+      // Expose small utilities used elsewhere
+      window.updateStatus = function(status) {
+        const statusMessages = {
+          'scheduled': 'Job marked as scheduled ✅',
+          'enroute': 'Status updated: En route to customer 🚗',
+          'started': 'Job started - timer activated 🔧',
+          'complete': 'Job completed successfully! ✅'
+        };
+        alert(statusMessages[status] || 'Status updated');
+      };
+      window.showHelp = function() {
+        alert('Help & Support\n\nFor technical support:\n📞 Call: 469-900-5194\n📧 Email: johnniesue@a-1apsvc.com\n\nFor system issues, contact your administrator.');
+      };
+      window.showComingSoon = function(feature) {
+        alert(`${feature} feature is coming soon!\n\nThis will integrate with your existing customer management system to provide comprehensive ${feature.toLowerCase()} functionality.`);
+      };
 
-            function activateTab(targetTab, skipConsole) {
-                tabs.forEach(t => {
-                    const isTarget = t === targetTab;
-                    t.classList.toggle('active', isTarget);
-                    t.setAttribute('aria-selected', isTarget ? 'true' : 'false');
-                });
-                const name = (targetTab && (targetTab.dataset.tab || targetTab.textContent.trim())) || '';
-                if (!skipConsole) console.log('Activated tab:', name);
-                // TODO: wire to routing or show/hide content for each section
-                // Example: if (name === 'Customers') location.href = '/customers.html';
-            }
-
-            if (tabs.length) {
-                // click
-                tabs.forEach(t => {
-                    t.addEventListener('click', () => {
-                        activateTab(t);
-                        if ((t.dataset.tab || t.textContent).trim() === 'Inbox') {
-                            const b = document.getElementById('inboxBadge');
-                            if (b) b.style.display = 'none'; // simple UX: hide badge when clicked
-                        }
-                    });
-                });
-
-                // keyboard navigation (left/right)
-                tablist && tablist.addEventListener('keydown', (e) => {
-                    const key = e.key;
-                    const current = tabs.findIndex(t => t.classList.contains('active'));
-                    if (key === 'ArrowRight') {
-                        e.preventDefault();
-                        const next = (current + 1) % tabs.length;
-                        activateTab(tabs[next], true);
-                        tabs[next].focus();
-                    } else if (key === 'ArrowLeft') {
-                        e.preventDefault();
-                        const prev = (current - 1 + tabs.length) % tabs.length;
-                        activateTab(tabs[prev], true);
-                        tabs[prev].focus();
-                    }
-                });
-            }
-
-            // New button placeholder
-            document.getElementById('newBtn')?.addEventListener('click', () => {
-                alert('Create a new item (wire this to your create flow).');
-            });
-
-            // Apps button placeholder
-            window.openApps = function() {
-                alert('Open apps menu (implement as needed).');
-            };
-
-            // Date/time updater (keeps your original behavior)
-            function updateDateTime() {
-                const now = new Date();
-                const options = { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                };
-                const el = document.getElementById('currentDateTime');
-                if (el) el.textContent = now.toLocaleDateString('en-US', options);
-            }
-            updateDateTime();
-            setInterval(updateDateTime, 60000);
-
-            // Install prompt handling (keeps your original behavior)
-            let deferredPrompt;
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-
-                // Show install banner (simple inline)
-                const installBanner = document.createElement('div');
-                installBanner.innerHTML = `
-                    <div style="position: fixed; top: 0; left: 0; right: 0; background: #007ACC; color: white; padding: 1rem; text-align: center; z-index: 1200;">
-                        <span>📱 Install A-1APSVC Dashboard App for quick access</span>
-                        <button id="installNowBtn" style="margin-left: 1rem; background: white; color: #007ACC; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Install App</button>
-                        <button id="installLaterBtn" style="margin-left: 0.5rem; background: transparent; color: white; border: 1px solid white; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Later</button>
-                    </div>
-                `;
-                document.body.appendChild(installBanner);
-                document.getElementById('installNowBtn')?.addEventListener('click', installApp);
-                document.getElementById('installLaterBtn')?.addEventListener('click', () => installBanner.remove());
-            });
-
-            function installApp() {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((result) => {
-                        if (result.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        }
-                        deferredPrompt = null;
-                    });
-                }
-            }
-
-            // Expose small utilities used elsewhere
-            window.updateStatus = function(status) {
-                const statusMessages = {
-                    'scheduled': 'Job marked as scheduled ✅',
-                    'enroute': 'Status updated: En route to customer 🚗',
-                    'started': 'Job started - timer activated 🔧',
-                    'complete': 'Job completed successfully! ✅'
-                };
-                alert(statusMessages[status] || 'Status updated');
-            };
-            window.showHelp = function() {
-                alert('Help & Support\n\nFor technical support:\n📞 Call: 469-900-5194\n📧 Email: johnniesue@a-1apsvc.com\n\nFor system issues, contact your administrator.');
-            };
-            window.showComingSoon = function(feature) {
-                alert(`${feature} feature is coming soon!\n\nThis will integrate with your existing customer management system to provide comprehensive ${feature.toLowerCase()} functionality.`);
-            };
-
-            console.log('Header with integrated tabs initialized');
-        })();
-    </script>
+      console.log('Header with integrated tabs initialized');
+    })();
+  </script>
 </body>
 </html>
