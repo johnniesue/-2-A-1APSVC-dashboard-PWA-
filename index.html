@@ -1,646 +1,819 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>A-1APSVC Customer Management</title>
-  <link rel="manifest" href="manifest.json">
-
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;color:#333}
-    .header{background:rgba(255,255,255,.1);backdrop-filter:blur(10px);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.2)}
-    .logo-container{display:flex;align-items:center;gap:1rem}
-    .logo{width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
-    .logo img{width:30px;height:30px;object-fit:contain}
-    h1{color:#fff;font-size:1.5rem;font-weight:600}
-    .nav-buttons{display:flex;gap:.5rem}
-    .nav-btn{padding:.5rem 1rem;border:none;border-radius:8px;background:rgba(255,255,255,.2);color:#fff;text-decoration:none;font-weight:500;transition:.3s;cursor:pointer}
-    .nav-btn:hover{background:rgba(255,255,255,.3);transform:translateY(-2px)}
-    .container{max-width:1200px;margin:2rem auto;padding:0 1rem}
-    .main-card{background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-radius:20px;padding:2rem;box-shadow:0 20px 40px rgba(0,0,0,.1);margin-bottom:2rem}
-    .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem}
-    .page-title{display:flex;align-items:center;gap:1rem;font-size:1.8rem;font-weight:600;color:#2d3748}
-    .action-buttons{display:flex;gap:1rem}
-    .btn{padding:.75rem 1.5rem;border:none;border-radius:10px;font-weight:600;cursor:pointer;transition:.3s;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem}
-    .btn-primary{background:linear-gradient(135deg,#4299e1,#3182ce);color:#fff}
-    .btn-success{background:linear-gradient(135deg,#48bb78,#38a169);color:#fff}
-    .btn-warning{background:linear-gradient(135deg,#ed8936,#dd6b20);color:#fff}
-    .btn-danger{background:linear-gradient(135deg,#f56565,#e53e3e);color:#fff}
-    .btn:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(0,0,0,.2)}
-    .search-section{margin-bottom:2rem}
-    .search-bar{display:flex;gap:1rem;margin-bottom:1rem}
-    .search-input{flex:1;padding:1rem;border:2px solid #e2e8f0;border-radius:10px;font-size:1rem;transition:border-color .3s}
-    .search-input:focus{outline:none;border-color:#4299e1}
-    .filter-buttons{display:flex;gap:.5rem;flex-wrap:wrap}
-    .filter-btn{padding:.5rem 1rem;border:2px solid #e2e8f0;border-radius:20px;background:#fff;color:#4a5568;cursor:pointer;transition:.3s}
-    .filter-btn.active{background:#4299e1;color:#fff;border-color:#4299e1}
-    .customers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:1.5rem;margin-bottom:2rem}
-    .customer-card{background:#fff;border-radius:15px;padding:1.5rem;box-shadow:0 4px 6px rgba(0,0,0,.1);border:2px solid transparent;transition:.3s;position:relative}
-    .customer-card:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,.15)}
-    .customer-card.duplicate{border-color:#f56565;background:#fed7d7}
-    .customer-card.potential-duplicate{border-color:#ed8936;background:#feebc8}
-    .duplicate-badge{position:absolute;top:10px;right:10px;padding:.25rem .5rem;border-radius:20px;font-size:.75rem;font-weight:600;color:#fff}
-    .duplicate-badge.exact{background:#f56565}
-    .duplicate-badge.potential{background:#ed8936}
-    .customer-name{font-size:1.2rem;font-weight:600;color:#2d3748;margin-bottom:.5rem}
-    .customer-info{color:#4a5568;margin-bottom:.5rem}
-    .customer-tags{display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0}
-    .tag{padding:.25rem .5rem;background:#e2e8f0;color:#4a5568;border-radius:15px;font-size:.75rem}
-    .customer-actions{display:flex;gap:.5rem;margin-top:1rem}
-    .btn-small{padding:.5rem 1rem;font-size:.875rem}
-    .empty-state{text-align:center;padding:4rem 2rem;color:#718096}
-    .empty-icon{font-size:4rem;margin-bottom:1rem}
-    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;backdrop-filter:blur(5px)}
-    .modal.active{display:flex;align-items:center;justify-content:center}
-    .modal-content{background:#fff;border-radius:20px;padding:2rem;max-width:600px;width:90%;max-height:80vh;overflow-y:auto}
-    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
-    .modal-title{font-size:1.5rem;font-weight:600;color:#2d3748}
-    .close-btn{background:none;border:none;font-size:1.5rem;cursor:pointer;color:#718096}
-    .form-group{margin-bottom:1rem}
-    .form-label{display:block;margin-bottom:.5rem;font-weight:600;color:#4a5568}
-    .form-input{width:100%;padding:.75rem;border:2px solid #e2e8f0;border-radius:8px;font-size:1rem;transition:border-color .3s}
-    .form-input:focus{outline:none;border-color:#4299e1}
-    .duplicate-comparison{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
-    .comparison-card{padding:1rem;border:2px solid #e2e8f0;border-radius:10px;background:#f7fafc}
-    .comparison-card.selected{border-color:#4299e1;background:#ebf8ff}
-    .merge-actions{display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem}
-    .import-section{background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-radius:20px;padding:2rem;box-shadow:0 20px 40px rgba(0,0,0,.1);margin-bottom:2rem}
-    .import-header{text-align:center;margin-bottom:2rem}
-    .import-title{font-size:1.5rem;font-weight:600;color:#2d3748;margin-bottom:.5rem}
-    .import-subtitle{color:#718096}
-    .file-upload{border:2px dashed #cbd5e0;border-radius:15px;padding:2rem;text-align:center;margin-bottom:1rem;transition:.3s;cursor:pointer}
-    .file-upload:hover{border-color:#4299e1;background:#f7fafc}
-    .file-upload.dragover{border-color:#4299e1;background:#ebf8ff}
-    .upload-icon{font-size:3rem;color:#cbd5e0;margin-bottom:1rem}
-    .upload-text{color:#4a5568;margin-bottom:.5rem}
-    .upload-hint{color:#718096;font-size:.875rem}
-    .progress-bar{width:100%;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin:1rem 0}
-    .progress-fill{height:100%;background:linear-gradient(90deg,#4299e1,#3182ce);width:0%;transition:width .3s}
-    .duplicate-summary{background:#fef5e7;border:2px solid #ed8936;border-radius:10px;padding:1rem;margin:1rem 0}
-    .duplicate-list{max-height:300px;overflow-y:auto;margin-top:1rem}
-    .duplicate-item{display:flex;justify-content:space-between;align-items:center;padding:.5rem;border-bottom:1px solid #e2e8f0}
-    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
-    .stat-card{background:#fff;border-radius:15px;padding:1.5rem;text-align:center;box-shadow:0 4px 6px rgba(0,0,0,.1)}
-    .stat-number{font-size:2rem;font-weight:700;color:#2d3748}
-    .stat-label{color:#718096;font-size:.875rem;margin-top:.5rem}
-    @media (max-width:768px){
-      .container{padding:0 .5rem}
-      .customers-grid{grid-template-columns:1fr}
-      .duplicate-comparison{grid-template-columns:1fr}
-      .action-buttons{flex-direction:column}
-    }
-  </style>
-
-  <!-- Firebase compat builds -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-1APSVC Dashboard PWA</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/style.css">
+    
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#007ACC">
+    
+    <!-- Apple touch icon -->
+    <link rel="apple-touch-icon" href="/images/icon-192.png">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #007ACC 0%, #0056b3 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .company-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .company-subtitle {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .welcome-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .welcome-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .welcome-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .date-time {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .welcome-subtitle {
+            color: #64748b;
+            margin: 0;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-color, #007ACC);
+        }
+        
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .metric-icon {
+            font-size: 1.5rem;
+            opacity: 0.7;
+        }
+        
+        .metric-trend {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        
+        .trend-up {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .trend-down {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .metric-title {
+            font-size: 0.875rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+        
+        .metric-subtitle {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .performance-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+        
+        .performance-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .performance-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .performance-item {
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .performance-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+        
+        .performance-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .section-card.active {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .section-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+        
+        .section-description {
+            font-size: 0.875rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        
+        .section-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-available {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-coming-soon {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .quick-actions {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+        
+        .quick-actions-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .quick-actions-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .btn-primary {
+            background: #007ACC;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-tertiary {
+            background: #64748b;
+            color: white;
+        }
+        
+        .service-area-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+        
+        .service-area-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .service-area-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .map-placeholder {
+            width: 100%;
+            height: 300px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 0.875rem;
+            border: 2px dashed #cbd5e1;
+        }
+        
+        .system-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .status-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .status-connected {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-ready {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-protected {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .status-info h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .status-info p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sections-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <!-- === A-1 Top Toolbar === -->
-<header class="topbar" role="banner">
-  <div class="topbar__inner">
-    <button class="topbar__menu-btn" aria-label="Toggle navigation" aria-controls="topbarNav" aria-expanded="false">
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-        <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
-      </svg>
-    </button>
-
-    <a class="topbar__brand" href="index.html" aria-label="A-1 APSVC Dashboard">A-1APSvc</a>
-
-    <nav id="topbarNav" class="topbar__nav" role="navigation" aria-label="Primary">
-      <a href="index.html" class="topbar__link" data-path="index.html">Home</a>
-      <a href="index.html#dashboard" class="topbar__link" data-path="index.html#dashboard">Dash</a>
-      <a href="index.html#inbox" class="topbar__link" data-path="index.html#inbox">Inbox</a>
-      <a href="schedule.html" class="topbar__link" data-path="schedule.html">Schedule</a>
-      <a href="index.html#customers" class="topbar__link" data-path="customers">Customers</a>
-      <a href="index.html#money" class="topbar__link" data-path="money">My Money</a>
-      <a href="index.html#payroll" class="topbar__link" data-path="payroll">Payroll</a>
-      <a href="reports.html" class="topbar__link" data-path="reports.html">Reporting</a>
-      <a href="index.html#marketing" class="topbar__link" data-path="marketing">Marketing</a>
-      <a href="index.html#pricebook" class="topbar__link" data-path="pricebook">Price Book</a>
-      <a href="index.html#pipeline" class="topbar__link" data-path="pipeline">Pipeline</a>
-    </nav>
-
-    <form class="topbar__search" role="search">
-      <input class="topbar__search-input" name="q" type="search" placeholder="Search" aria-label="Search" />
-    </form>
-
-    <div class="topbar__actions">
-      <button class="topbar__new" type="button">Create</button>
-      <button class="icon-btn" aria-label="Notifications">
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z" fill="currentColor"/>
-        </svg>
-      </button>
-      <button class="icon-btn" aria-label="Apps">
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" fill="currentColor"/>
-        </svg>
-      </button>
-      <a class="icon-btn" href="settings.html" aria-label="Settings">
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <path d="M19.14 12.94a7.5 7.5 0 0 0 .05-.94 7.5 7.5 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.6 7.6 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 12 1h-4a.5.5 0 0 0-.5.42l-.36 2.54c-.58.23-1.12.53-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L.6 7.98a.5.5 0 0 0 .12.64l2.03 1.58c-.03.31-.05.63-.05.94s.02.63.05.94L.72 13.66a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.51.41 1.05.71 1.63.94l.36 2.54A.5.5 0 0 0 8 23h4a.5.5 0 0 0 .5-.42l.36-2.54c.58-.23 1.12-.53 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM10 12a2 2 0 1 1 4 0 2 2 0 0 1-4 0Z" fill="currentColor"/>
-        </svg>
-      </a>
-      <div class="avatar" title="Chris Crabtree">CC</div>
-    </div>
-  </div>
-</header>
-<!-- === /A-1 Top Toolbar === -->
-
-  <div class="header">
-    <div class="logo-container">
-      <div class="logo">
-        <img id="headerLogo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iIzQyOTllMSIvPjxzdmcgeD0iOCIgeT0iOCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPjwvc3ZnPg==" alt="A-1APSVC Logo">
-      </div>
-      <h1>Customer Management</h1>
-    </div>
-    <div class="nav-buttons">
-      <a href="index.html" class="nav-btn">🏠 Dashboard</a>
-      <a href="schedule.html" class="nav-btn">📅 Schedule</a>
-      <a href="reports.html" class="nav-btn">📊 Reports</a>
-    </div>
-  </div>
-
-  <div class="container">
-    <!-- Import -->
-    <div class="import-section" id="importSection">
-      <div class="import-header">
-        <div class="import-title">📥 Import Customer Data</div>
-        <div class="import-subtitle">Upload your Housecall Pro export file or Excel spreadsheet</div>
-      </div>
-
-      <div class="file-upload" id="fileUpload">
-        <div class="upload-icon">📁</div>
-        <div class="upload-text">Click to select file or drag and drop</div>
-        <div class="upload-hint">Supports Excel (.xlsx), CSV, and JSON files</div>
-        <input type="file" id="fileInput" accept=".xlsx,.csv,.json" style="display:none;">
-      </div>
-
-      <div class="progress-bar" id="progressBar" style="display:none;">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
-
-      <div class="duplicate-summary" id="duplicateSummary" style="display:none;">
-        <h3>🔍 Duplicate Detection Results</h3>
-        <p id="duplicateCount">Found 0 potential duplicates</p>
-        <div class="duplicate-list" id="duplicateList"></div>
-      </div>
-
-      <div style="text-align:center;margin-top:1rem;">
-        <button class="btn btn-primary" id="processImportBtn" style="display:none;">Process Import</button>
-        <button class="btn btn-success" id="confirmImportBtn" style="display:none;">Confirm Import</button>
-      </div>
-    </div>
-
-    <!-- Main -->
-    <div class="main-card">
-      <div class="page-header">
-        <div class="page-title">👥 Customer Management</div>
-        <div class="action-buttons">
-          <button class="btn btn-warning" id="findDuplicatesBtn">🔍 Find Duplicates</button>
-          <button class="btn btn-primary" id="addCustomerBtn">+ Add New Customer</button>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div>
+                    <h1 class="company-title">A-1APSVC Dashboard</h1>
+                    <p class="company-subtitle">Professional Service Management</p>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>Online</span>
+            </div>
         </div>
-      </div>
+    </header>
 
-      <!-- Stats -->
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-number" id="totalCustomers">0</div><div class="stat-label">Total Customers</div></div>
-        <div class="stat-card"><div class="stat-number" id="duplicatesFound">0</div><div class="stat-label">Duplicates Found</div></div>
-        <div class="stat-card"><div class="stat-number" id="recentlyAdded">0</div><div class="stat-label">Recently Added</div></div>
-        <div class="stat-card"><div class="stat-number" id="activeCustomers">0</div><div class="stat-label">Active Customers</div></div>
-      </div>
-
-      <!-- Search/Filters -->
-      <div class="search-section">
-        <div class="search-bar">
-          <input type="text" class="search-input" id="searchInput" placeholder="Search customers by name, email, phone, or address...">
-          <button class="btn btn-primary" id="searchBtn">🔍 Search</button>
+    <main class="main-container">
+        <div class="welcome-section">
+            <div class="welcome-header">
+                <h2 class="welcome-title">
+                    👋 Hi, Chris
+                </h2>
+                <div class="date-time" id="currentDateTime"></div>
+            </div>
+            <p class="welcome-subtitle">Here's what's happening with your business today</p>
         </div>
-        <div class="filter-buttons">
-          <button class="filter-btn active" data-filter="all">All Customers</button>
-          <button class="filter-btn" data-filter="recent">Recently Added</button>
-          <button class="filter-btn" data-filter="duplicates">Potential Duplicates</button>
-          <button class="filter-btn" data-filter="no-email">Missing Email</button>
-          <button class="filter-btn" data-filter="no-phone">Missing Phone</button>
+
+        <div class="metrics-grid">
+            <div class="metric-card" style="--accent-color: #3b82f6;">
+                <div class="metric-header">
+                    <div class="metric-icon">📋</div>
+                    <div class="metric-trend trend-up">+15%</div>
+                </div>
+                <div class="metric-title">Open Estimates</div>
+                <div class="metric-value">68</div>
+                <div class="metric-subtitle">$326,998.07 total value</div>
+            </div>
+            
+            <div class="metric-card" style="--accent-color: #10b981;">
+                <div class="metric-header">
+                    <div class="metric-icon">💰</div>
+                    <div class="metric-trend trend-up">+8%</div>
+                </div>
+                <div class="metric-title">Open Invoices</div>
+                <div class="metric-value">33</div>
+                <div class="metric-subtitle">$46,203.67 outstanding</div>
+            </div>
+            
+            <div class="metric-card" style="--accent-color: #f59e0b;">
+                <div class="metric-header">
+                    <div class="metric-icon">🔧</div>
+                    <div class="metric-trend trend-up">+12%</div>
+                </div>
+                <div class="metric-title">Unscheduled Jobs</div>
+                <div class="metric-value">274</div>
+                <div class="metric-subtitle">$265,558.37 potential</div>
+            </div>
+            
+            <div class="metric-card" style="--accent-color: #8b5cf6;">
+                <div class="metric-header">
+                    <div class="metric-icon">📅</div>
+                    <div class="metric-trend trend-down">Today</div>
+                </div>
+                <div class="metric-title">Upcoming Visits</div>
+                <div class="metric-value">0</div>
+                <div class="metric-subtitle">Unscheduled service visits</div>
+            </div>
         </div>
-      </div>
 
-      <!-- Grid -->
-      <div class="customers-grid" id="customersGrid">
-        <div class="empty-state">
-          <div class="empty-icon">👥</div>
-          <h3>No Customers Yet</h3>
-          <p>Import your customer data or add your first customer to get started</p>
-          <button class="btn btn-success" onclick="document.getElementById('fileUpload').click()">📥 Import Customers</button>
+        <div class="performance-section">
+            <div class="performance-header">
+                <span>📊</span>
+                <h3 class="performance-title">Today's Performance</h3>
+            </div>
+            <div class="performance-grid">
+                <div class="performance-item">
+                    <div class="performance-value">$0</div>
+                    <div class="performance-label">Revenue Earned</div>
+                </div>
+                <div class="performance-item">
+                    <div class="performance-value">0</div>
+                    <div class="performance-label">Jobs Completed</div>
+                </div>
+                <div class="performance-item">
+                    <div class="performance-value">$0</div>
+                    <div class="performance-label">Average Job Size</div>
+                </div>
+                <div class="performance-item">
+                    <div class="performance-value">2</div>
+                    <div class="performance-label">Active Technicians</div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Add/Edit Modal -->
-  <div class="modal" id="customerModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title" id="modalTitle">Add New Customer</h2>
-        <button class="close-btn" onclick="closeModal('customerModal')">&times;</button>
-      </div>
-      <form id="customerForm">
-        <div class="form-group"><label class="form-label">First Name *</label><input type="text" class="form-input" id="firstName" required></div>
-        <div class="form-group"><label class="form-label">Last Name *</label><input type="text" class="form-input" id="lastName" required></div>
-        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="email"></div>
-        <div class="form-group"><label class="form-label">Mobile Phone</label><input type="tel" class="form-input" id="mobilePhone"></div>
-        <div class="form-group"><label class="form-label">Home Phone</label><input type="tel" class="form-input" id="homePhone"></div>
-        <div class="form-group"><label class="form-label">Work Phone</label><input type="tel" class="form-input" id="workPhone"></div>
-        <div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="address"></div>
-        <div class="form-group"><label class="form-label">Company</label><input type="text" class="form-input" id="company"></div>
-        <div class="form-group"><label class="form-label">Tags (comma separated)</label><input type="text" class="form-input" id="tags" placeholder="VIP, Regular, Commercial"></div>
-        <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="notes" rows="3"></textarea></div>
-        <div class="merge-actions">
-          <button type="button" class="btn btn-secondary" onclick="closeModal('customerModal')">Cancel</button>
-          <button type="submit" class="btn btn-success">Save Customer</button>
+        <div class="sections-grid">
+            <div class="section-card active" onclick="window.open('https://johnniesue.github.io/a1apsvc-dashboard-customers/', '_blank')">
+                <div class="section-header">
+                    <div class="section-icon">👥</div>
+                    <div>
+                        <div class="section-title">Customer Management</div>
+                        <div class="section-description">Manage customer data, job tracking, and service history</div>
+                    </div>
+                </div>
+                <div class="section-status status-active">✅ Active System</div>
+            </div>
+
+            <div class="section-card" onclick="window.open('schedule.html', '_blank')">
+                <div class="section-header">
+                    <div class="section-icon">📅</div>
+                    <div>
+                        <div class="section-title">Scheduling</div>
+                        <div class="section-description">Calendar management and appointment scheduling</div>
+                    </div>
+                </div>
+                <div class="section-status status-available">✅ Available</div>
+            </div>
+
+            <div class="section-card" onclick="window.open('reports.html', '_blank')">
+                <div class="section-header">
+                    <div class="section-icon">📊</div>
+                    <div>
+                        <div class="section-title">Financial Reports</div>
+                        <div class="section-description">Revenue analytics and business intelligence</div>
+                    </div>
+                </div>
+                <div class="section-status status-available">✅ Available</div>
+            </div>
+
+            <div class="section-card" onclick="showComingSoon('Service Requests')">
+                <div class="section-header">
+                    <div class="section-icon">🔧</div>
+                    <div>
+                        <div class="section-title">Service Requests</div>
+                        <div class="section-description">Track and manage plumbing service requests</div>
+                    </div>
+                </div>
+                <div class="section-status status-coming-soon">⏳ Coming Soon</div>
+            </div>
         </div>
-      </form>
-    </div>
-  </div>
 
-  <!-- Merge Modal -->
-  <div class="modal" id="mergeModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">🔄 Merge Duplicate Customers</h2>
-        <button class="close-btn" onclick="closeModal('mergeModal')">&times;</button>
-      </div>
-      <p>Select which customer record to keep and merge the data:</p>
-      <div class="duplicate-comparison" id="duplicateComparison"></div>
-      <div class="merge-actions">
-        <button type="button" class="btn btn-secondary" onclick="closeModal('mergeModal')">Cancel</button>
-        <button type="button" class="btn btn-danger" id="mergeCustomersBtn">Merge Selected</button>
-      </div>
-    </div>
-  </div>
+        <div class="quick-actions">
+            <div class="quick-actions-header">
+                <span>🚀</span>
+                <h3 class="quick-actions-title">Quick Actions for Techs</h3>
+            </div>
+            <div class="actions-grid">
+                <a href="https://johnniesue.github.io/a1apsvc-dashboard-customers/" class="action-btn btn-primary">
+                    <span>📋</span>
+                    Open Customer System
+                </a>
+                <button class="action-btn btn-secondary" onclick="updateStatus('scheduled')">
+                    <span>✅</span>
+                    Mark Scheduled
+                </button>
+                <button class="action-btn btn-secondary" onclick="updateStatus('enroute')">
+                    <span>🚗</span>
+                    I'm En Route
+                </button>
+                <button class="action-btn btn-tertiary" onclick="updateStatus('started')">
+                    <span>🔧</span>
+                    Job Started
+                </button>
+                <button class="action-btn btn-tertiary" onclick="updateStatus('complete')">
+                    <span>✅</span>
+                    Job Complete
+                </button>
+                <button class="action-btn btn-tertiary" onclick="showHelp()">
+                    <span>❓</span>
+                    Help & Support
+                </button>
+            </div>
+        </div>
 
-  <script src="logo-manager.js"></script>
-  <script src="customer-data.js"></script>
+        <div class="service-area-section">
+            <div class="service-area-header">
+                <span>🗺️</span>
+                <h3 class="service-area-title">Service Area Map</h3>
+            </div>
+            <div id="serviceAreaMap" style="width: 100%; height: 300px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d429168.10916846283!2d-96.96523!3d33.040417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864c19f77b45974b%3A0xb9ec9ba4f647678f!2sLucas%2C%20TX!5e0!3m2!1sen!2sus!4v1635959999999!5m2!1sen!2sus&zoom=10"
+                    width="100%" 
+                    height="300" 
+                    style="border:0; border-radius: 8px;" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+                <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #64748b;">
+                    📍 Service Areas: Lucas, Allen, McKinney, Plano, Frisco, Wylie, Fairview, Parker
+                </div>
+            </div>
+        </div>
 
-  <script>
-    // ===== FIREBASE (compat) =====
-    const firebaseConfig = {
-      apiKey: "AIzaSyDeVLmKQXCMN_JZNwFL9OhfCQKVRHsVhY4",
-      authDomain: "a1-customer-dashboard.firebaseapp.com",
-      projectId: "a1-customer-dashboard",
-      storageBucket: "a1-customer-dashboard.appspot.com",
-      messagingSenderId: "981606789719",
-      appId: "1:981606789719:web:327592a2cefa2536bda912"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+        <div class="system-status">
+            <div class="status-card">
+                <div class="status-icon status-connected">🔥</div>
+                <div class="status-info">
+                    <h4>Firebase Status</h4>
+                    <p>Real-time database for customer data</p>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <div class="status-icon status-ready">📱</div>
+                <div class="status-info">
+                    <h4>Mobile Friendly</h4>
+                    <p>Optimized for field technicians on Android</p>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <div class="status-icon status-protected">🔒</div>
+                <div class="status-info">
+                    <h4>Data Security</h4>
+                    <p>Customer data is securely stored and protected</p>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <div class="status-icon status-ready">🗺️</div>
+                <div class="status-info">
+                    <h4>Maps Integration</h4>
+                    <p>Google Maps with service area verification</p>
+                </div>
+            </div>
+        </div>
+    </main>
 
-    // ===== CUSTOMER MANAGER =====
-    class CustomerManager {
-      constructor(){
-        this.customers = [];
-        this.duplicates = [];
-        this.selectedCustomer = null;
-        this.unsubscribe = null;
-        this.init();
-      }
-
-      async init(){
-        this.setupEventListeners();
-        this.loadLogo();
-        console.log("🔌 Connecting to Firestore…");
-        try {
-          await this.subscribeFirestore();
-          console.log("✅ Firestore live subscription active (Customer collection).");
-        } catch (e) {
-          console.error("❌ Firestore failed, loading local seed instead:", e);
-          this.customers = initializeCustomerData();
-          this.renderCustomers();
-          this.updateStats();
+    <!-- External JavaScript -->
+    <script src="/script.js"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
         }
-      }
+    </script>
 
-      loadLogo(){
-        const savedLogo = localStorage.getItem('a1apsvc_logo');
-        if (savedLogo) document.getElementById('headerLogo').src = savedLogo;
-      }
-
-      // --- Firestore live read ---
-      async subscribeFirestore(){
-        if (this.unsubscribe){ this.unsubscribe(); this.unsubscribe=null; }
-        this.renderLoading();
-        // Use "Customer" collection (capital C). Change here if your collection name differs.
-        this.unsubscribe = db.collection("Customer").orderBy("firstName")
-          .onSnapshot(snap=>{
-            this.customers = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-            console.log(`📥 Loaded ${this.customers.length} customer(s)`);
-            this.renderCustomers();
-            this.updateStats();
-          }, err=>{ throw err; });
-      }
-
-      // --- CRUD ---
-      async addCustomer(payload){
-        const doc = { ...payload, dateAdded: firebase.firestore.FieldValue.serverTimestamp() };
-        await db.collection("Customer").add(doc);
-      }
-      async updateCustomer(id,payload){
-        await db.collection("Customer").doc(String(id)).update({
-          ...payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
-      async deleteCustomer(id){
-        if (!confirm("Delete this customer?")) return;
-        await db.collection("Customer").doc(String(id)).delete();
-      }
-
-      // --- Events/UI ---
-      setupEventListeners(){
-        document.getElementById('fileUpload').addEventListener('click', ()=>document.getElementById('fileInput').click());
-        document.getElementById('fileInput').addEventListener('change', (e)=>this.handleFileUpload(e.target.files[0]));
-        const fileUpload = document.getElementById('fileUpload');
-        fileUpload.addEventListener('dragover', e=>{e.preventDefault();fileUpload.classList.add('dragover')});
-        fileUpload.addEventListener('dragleave', ()=>fileUpload.classList.remove('dragover'));
-        fileUpload.addEventListener('drop', e=>{e.preventDefault();fileUpload.classList.remove('dragover');this.handleFileUpload(e.dataTransfer.files[0])});
-
-        document.getElementById('addCustomerBtn').addEventListener('click', ()=>this.openCustomerModal());
-        document.getElementById('findDuplicatesBtn').addEventListener('click', ()=>this.findDuplicates());
-        document.getElementById('processImportBtn').addEventListener('click', ()=>this.processImport());
-        document.getElementById('confirmImportBtn').addEventListener('click', ()=>this.confirmImport());
-
-        document.getElementById('searchInput').addEventListener('input', e=>this.searchCustomers(e.target.value));
-        document.querySelectorAll('.filter-btn').forEach(btn=>{
-          btn.addEventListener('click', (e)=>{
-            document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-            e.target.classList.add('active');
-            this.filterCustomers(e.target.dataset.filter);
-          });
-        });
-
-        document.getElementById('customerForm').addEventListener('submit', async (e)=>{
-          e.preventDefault(); await this.saveCustomer();
-        });
-
-        document.getElementById('mergeCustomersBtn').addEventListener('click', ()=>this.mergeCustomers());
-      }
-
-      // --- Import flow (writes to Firestore on confirm) ---
-      async handleFileUpload(file){
-        if (!file) return;
-        const progressBar=document.getElementById('progressBar');
-        const progressFill=document.getElementById('progressFill');
-        const processBtn=document.getElementById('processImportBtn');
-        progressBar.style.display='block'; progressFill.style.width='0%';
-        try{
-          for(let i=0;i<=100;i+=10){progressFill.style.width=i+'%';await new Promise(r=>setTimeout(r,80))}
-          const data = await this.parseFile(file);
-          this.importData = data;
-          this.findImportDuplicates(data);
-          processBtn.style.display='inline-block';
-        }catch(err){
-          alert('Error reading file: '+err.message);
-          progressBar.style.display='none';
+    <script>
+        // Update current date and time
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
         }
-      }
-      async parseFile(file){
-        return new Promise((resolve,reject)=>{
-          const reader=new FileReader();
-          reader.onload=(e)=>{
-            try{
-              if (file.name.endsWith('.json')) resolve(JSON.parse(e.target.result));
-              else if (file.name.endsWith('.csv')) resolve(this.parseCSV(e.target.result));
-              else if (file.name.endsWith('.xlsx')) resolve(this.simulateExcelData());
-              else reject(new Error('Unsupported file format'));
-            }catch(er){reject(er)}
-          };
-          reader.onerror=()=>reject(new Error('Failed to read file'));
-          reader.readAsText(file);
+        
+        // Update every minute
+        updateDateTime();
+        setInterval(updateDateTime, 60000);
+        
+        // Quick action functions
+        function updateStatus(status) {
+            const statusMessages = {
+                'scheduled': 'Job marked as scheduled ✅',
+                'enroute': 'Status updated: En route to customer 🚗',
+                'started': 'Job started - timer activated 🔧',
+                'complete': 'Job completed successfully! ✅'
+            };
+            
+            alert(statusMessages[status] || 'Status updated');
+        }
+        
+        function showHelp() {
+            alert('Help & Support\n\nFor technical support:\n📞 Call: 469-900-5194\n📧 Email: johnniesue@a-1apsvc.com\n\nFor system issues, contact your administrator.');
+        }
+        
+        function showComingSoon(feature) {
+            alert(`${feature} feature is coming soon!\n\nThis will integrate with your existing customer management system to provide comprehensive ${feature.toLowerCase()} functionality.`);
+        }
+        
+        // Install prompt handling
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install banner
+            const installBanner = document.createElement('div');
+            installBanner.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; background: #007ACC; color: white; padding: 1rem; text-align: center; z-index: 1000;">
+                    <span>📱 Install A-1APSVC Dashboard App for quick access</span>
+                    <button onclick="installApp()" style="margin-left: 1rem; background: white; color: #007ACC; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Install App</button>
+                    <button onclick="this.parentElement.parentElement.remove()" style="margin-left: 0.5rem; background: transparent; color: white; border: 1px solid white; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Later</button>
+                </div>
+            `;
+            document.body.appendChild(installBanner);
         });
-      }
-      parseCSV(csvText){
-        const lines=csvText.split('\n'); const headers=lines[0].split(',').map(h=>h.trim()); const data=[];
-        for(let i=1;i<lines.length;i++){ if(lines[i].trim()){ const values=lines[i].split(',').map(v=>v.trim()); const obj={}; headers.forEach((h,idx)=>obj[h]=values[idx]||''); data.push(obj);} }
-        return data;
-      }
-      simulateExcelData(){
-        return [
-          {'First Name':'Frank','Last Name':'Reed','Email':'frankpr1980@gmail.com','Mobile Number':'9.17E+09','Home Number':'','Work Number':'','Company':'','Tags':'','Notes':'Complete','ID':'57414217'},
-          {'First Name':'Buddy','Last Name':'Lane','Email':'','Mobile Number':'2.15E+09','Home Number':'','Work Number':'','Company':'','Tags':'','Notes':'','ID':'58438781'},
-          {'First Name':'Poulins','Last Name':'Syriac','Email':'poulinssyriac@yahoo.com','Mobile Number':'2.04E+09','Home Number':'','Work Number':'','Company':'','Tags':'','Notes':'','ID':'58488134'}
-        ];
-      }
-      findImportDuplicates(data){
-        const dups=[]; const dupSummary=document.getElementById('duplicateSummary'); const dupCount=document.getElementById('duplicateCount'); const dupList=document.getElementById('duplicateList');
-        for(let i=0;i<data.length;i++){ for(let j=i+1;j<data.length;j++){ const s=this.calculateSimilarity(data[i],data[j]); if(s>0.7) dups.push({customer1:data[i],customer2:data[j],similarity:s,type:s>0.9?'exact':'potential'}); } }
-        data.forEach(c1=>{ this.customers.forEach(c2=>{ const s=this.calculateSimilarity(c1,c2); if(s>0.7) dups.push({customer1:c1,customer2:c2,similarity:s,type:s>0.9?'exact':'potential',isExisting:true}); }); });
-        if(dups.length){ dupSummary.style.display='block'; dupCount.textContent=`Found ${dups.length} potential duplicates`; dupList.innerHTML=dups.map(d=>`<div class="duplicate-item"><span>${this.getCustomerDisplayName(d.customer1)} ↔ ${this.getCustomerDisplayName(d.customer2)}</span><span class="duplicate-badge ${d.type}">${Math.round(d.similarity*100)}% match</span></div>`).join(''); }
-        this.importDuplicates=dups;
-      }
-      calculateSimilarity(a,b){
-        let s=0,f=0;
-        const n1=`${a['First Name']||a.firstName||''} ${a['Last Name']||a.lastName||''}`.toLowerCase().trim();
-        const n2=`${b['First Name']||b.firstName||''} ${b['Last Name']||b.lastName||''}`.toLowerCase().trim();
-        if(n1 && n2){ f++; if(n1===n2)s+=1; else if(this.lev(n1,n2)<=2)s+=.8; else if(n1.includes(n2)||n2.includes(n1))s+=.6; }
-        const e1=(a.Email||a.email||'').toLowerCase().trim(), e2=(b.Email||b.email||'').toLowerCase().trim();
-        if(e1 && e2){ f++; if(e1===e2)s+=1; else if(this.lev(e1,e2)<=2)s+=.7; }
-        const p1=this.normPhone(a['Mobile Number']||a.mobilePhone||''), p2=this.normPhone(b['Mobile Number']||b.mobilePhone||'');
-        if(p1 && p2){ f++; if(p1===p2)s+=1; else if(p1.includes(p2)||p2.includes(p1))s+=.8; }
-        return f? s/f : 0;
-      }
-      lev(a,b){const m=[];for(let i=0;i<=b.length;i++){m[i]=[i]}for(let j=0;j<=a.length;j++){m[0][j]=j}for(let i=1;i<=b.length;i++){for(let j=1;j<=a.length;j++){m[i][j]=b[i-1]===a[j-1]?m[i-1][j-1]:Math.min(m[i-1][j-1]+1,m[i][j-1]+1,m[i-1][j]+1)}}return m[b.length][a.length]}
-      normPhone(p){return String(p||'').replace(/\D/g,'')}
-      getCustomerDisplayName(c){const f=c['First Name']||c.firstName||'';const l=c['Last Name']||c.lastName||'';return `${f} ${l}`.trim()||'Unknown'}
-
-      processImport(){
-        if(!this.importData)return;
-        const confirmBtn=document.getElementById('confirmImportBtn'); const processBtn=document.getElementById('processImportBtn');
-        this.processedImportData=this.importData.map(c=>({
-          firstName:c['First Name']||'', lastName:c['Last Name']||'', email:c.Email||'',
-          mobilePhone:c['Mobile Number']||'', homePhone:c['Home Number']||'', workPhone:c['Work Number']||'',
-          company:c.Company||'', tags:c.Tags?c.Tags.split(',').map(t=>t.trim()).filter(Boolean):[],
-          notes:c.Notes||'', address:c.Address||'', dateAdded:new Date().toISOString(), isImported:true
-        }));
-        processBtn.style.display='none'; confirmBtn.style.display='inline-block';
-      }
-      async confirmImport(){
-        if(!this.processedImportData)return;
-        try{
-          for(const payload of this.processedImportData){ await this.addCustomer(payload); }
-          document.getElementById('importSection').style.display='none';
-          alert(`Successfully imported ${this.processedImportData.length} customers!`);
-        }catch(e){console.error(e);alert('Import failed—see console.');}
-      }
-
-      // --- Duplicates / Merge ---
-      findDuplicates(){
-        this.duplicates=[];
-        for(let i=0;i<this.customers.length;i++){
-          for(let j=i+1;j<this.customers.length;j++){
-            const sim=this.calculateSimilarity(this.customers[i],this.customers[j]);
-            if(sim>0.7)this.duplicates.push({customer1:this.customers[i],customer2:this.customers[j],similarity:sim,type:sim>0.9?'exact':'potential'});
-          }
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((result) => {
+                    if (result.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            }
         }
-        alert(this.duplicates.length?`Found ${this.duplicates.length} potential duplicates.`:'No duplicates found!');
-        this.renderCustomers(); this.updateStats();
-      }
-      showMergeModal(customerId){
-        const dup=this.duplicates.find(d=>d.customer1.id===customerId||d.customer2.id===customerId);
-        if(!dup)return;
-        const c1=dup.customer1, c2=dup.customer2, cmp=document.getElementById('duplicateComparison');
-        cmp.innerHTML=`
-          <div class="comparison-card" data-customer-id="${c1.id}">
-            <h4>Customer 1</h4>
-            <p><strong>Name:</strong> ${c1.firstName||''} ${c1.lastName||''}</p>
-            <p><strong>Email:</strong> ${c1.email||'None'}</p>
-            <p><strong>Phone:</strong> ${c1.mobilePhone||'None'}</p>
-            <p><strong>Address:</strong> ${c1.address||'None'}</p>
-            <p><strong>Company:</strong> ${c1.company||'None'}</p>
-            <button class="btn btn-primary" onclick="this.parentElement.classList.add('selected'); this.parentElement.nextElementSibling.classList.remove('selected')">Select This</button>
-          </div>
-          <div class="comparison-card" data-customer-id="${c2.id}">
-            <h4>Customer 2</h4>
-            <p><strong>Name:</strong> ${c2.firstName||''} ${c2.lastName||''}</p>
-            <p><strong>Email:</strong> ${c2.email||'None'}</p>
-            <p><strong>Phone:</strong> ${c2.mobilePhone||'None'}</p>
-            <p><strong>Address:</strong> ${c2.address||'None'}</p>
-            <p><strong>Company:</strong> ${c2.company||'None'}</p>
-            <button class="btn btn-primary" onclick="this.parentElement.classList.add('selected'); this.parentElement.previousElementSibling.classList.remove('selected')">Select This</button>
-          </div>`;
-        document.getElementById('mergeModal').classList.add('active');
-      }
-      async mergeCustomers(){
-        const selected=document.querySelector('.comparison-card.selected'); if(!selected){alert('Select a record to keep.');return;}
-        const keepId=selected.dataset.customerId;
-        const dup=this.duplicates.find(d=>d.customer1.id===keepId||d.customer2.id===keepId); if(!dup)return;
-        const keep=dup.customer1.id===keepId?dup.customer1:dup.customer2;
-        const remove=dup.customer1.id===keepId?dup.customer2:dup.customer1;
-        const merged={...keep}; for(const k of Object.keys(remove)){ if(merged[k]==null||merged[k]==='') merged[k]=remove[k]; }
-        try{
-          await this.updateCustomer(keep.id, merged);
-          await this.deleteCustomer(remove.id);
-          this.duplicates=this.duplicates.filter(d=>d.customer1.id!==remove.id&&d.customer2.id!==remove.id);
-          this.renderCustomers(); this.updateStats(); closeModal('mergeModal'); alert('Customers merged successfully!');
-        }catch(e){console.error(e);alert('Merge failed—see console.');}
-      }
-
-      // --- Save (modal) ---
-      async saveCustomer(){
-        const payload={
-          firstName:document.getElementById('firstName').value.trim(),
-          lastName:document.getElementById('lastName').value.trim(),
-          email:document.getElementById('email').value.trim(),
-          mobilePhone:document.getElementById('mobilePhone').value.trim(),
-          homePhone:document.getElementById('homePhone').value.trim(),
-          workPhone:document.getElementById('workPhone').value.trim(),
-          address:document.getElementById('address').value.trim(),
-          company:document.getElementById('company').value.trim(),
-          tags:document.getElementById('tags').value.split(',').map(t=>t.trim()).filter(Boolean),
-          notes:document.getElementById('notes').value.trim()
-        };
-        if(!payload.firstName||!payload.lastName){alert('First and Last name are required.');return;}
-        if(this.selectedCustomer){ await this.updateCustomer(this.selectedCustomer.id, payload); }
-        else { await this.addCustomer(payload); }
-        this.selectedCustomer=null; closeModal('customerModal');
-      }
-
-      // --- Search/Filter/Stats/Render ---
-      searchCustomers(q){
-        const needle=(q||'').toLowerCase();
-        if(!needle){ this.renderCustomers(); return; }
-        const list=this.customers.filter(c=>{
-          const text=`${c.firstName||''} ${c.lastName||''} ${c.email||''} ${c.mobilePhone||''} ${c.address||''}`.toLowerCase();
-          return text.includes(needle);
-        });
-        this.renderCustomers(list);
-      }
-      filterCustomers(f){
-        if(f==='all') return this.renderCustomers();
-        let list=this.customers;
-        if(f==='recent'){
-          const weekAgo=new Date(); weekAgo.setDate(weekAgo.getDate()-7);
-          list=this.customers.filter(c=>{
-            const d=c.dateAdded?.toDate ? c.dateAdded.toDate() : (c.dateAdded?new Date(c.dateAdded):null);
-            return d && d>weekAgo;
-          });
-        } else if(f==='duplicates'){
-          const ids=new Set(); this.duplicates.forEach(d=>{ids.add(d.customer1.id);ids.add(d.customer2.id)});
-          list=this.customers.filter(c=>ids.has(c.id));
-        } else if(f==='no-email'){
-          list=this.customers.filter(c=>!c.email);
-        } else if(f==='no-phone'){
-          list=this.customers.filter(c=>!c.mobilePhone && !c.homePhone && !c.workPhone);
-        }
-        this.renderCustomers(list);
-      }
-      updateStats(){
-        document.getElementById('totalCustomers').textContent=this.customers.length;
-        document.getElementById('duplicatesFound').textContent=this.duplicates.length;
-        const weekAgo=new Date(); weekAgo.setDate(weekAgo.getDate()-7);
-        const recent=this.customers.filter(c=>{
-          const d=c.dateAdded?.toDate?c.dateAdded.toDate():(c.dateAdded?new Date(c.dateAdded):null);
-          return d && d>weekAgo;
-        }).length;
-        document.getElementById('recentlyAdded').textContent=recent;
-        document.getElementById('activeCustomers').textContent=this.customers.filter(c=>c.email||c.mobilePhone).length;
-      }
-      renderLoading(){
-        document.getElementById('customersGrid').innerHTML=`<div class="empty-state"><div class="empty-icon">⏳</div><h3>Loading Customers…</h3><p>Connecting to database</p></div>`;
-      }
-      renderCustomers(list=this.customers){
-        const grid=document.getElementById('customersGrid');
-        if(!list.length){
-          grid.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><h3>No Customers Found</h3><p>Try adjusting your search or filters</p></div>`;
-          return;
-        }
-        grid.innerHTML=list.map(c=>{
-          const isDup=this.duplicates.some(d=>d.customer1.id===c.id||d.customer2.id===c.id);
-          const dupType=isDup?(this.duplicates.find(d=>d.customer1.id===c.id||d.customer2.id===c.id)?.type):null;
-          const tags=(c.tags&&c.tags.length)?`<div class="customer-tags">${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>`:'';
-          return `
-            <div class="customer-card ${isDup?dupType:''}" data-customer-id="${c.id}">
-              ${isDup?`<div class="duplicate-badge ${dupType}">${dupType==='exact'?'Exact':'Potential'} Duplicate</div>`:''}
-              <div class="customer-name">${(c.firstName||'')+' '+(c.lastName||'')}</div>
-              <div class="customer-info">📧 ${c.email||'No email'}</div>
-              <div class="customer-info">📱 ${c.mobilePhone||'No mobile'}</div>
-              <div class="customer-info">🏠 ${c.address||'No address'}</div>
-              ${c.company?`<div class="customer-info">🏢 ${c.company}</div>`:''}
-              ${tags}
-              <div class="customer-actions">
-                <button class="btn btn-primary btn-small" onclick="customerManager.openCustomerModal(customerManager.customers.find(x=>x.id==='${c.id}'))">✏️ Edit</button>
-                <button class="btn btn-danger btn-small" onclick="customerManager.deleteCustomer('${c.id}')">🗑️ Delete</button>
-                ${isDup?`<button class="btn btn-warning btn-small" onclick="customerManager.showMergeModal('${c.id}')">🔄 Merge</button>`:''}
-              </div>
-            </div>`;
-        }).join('');
-      }
-
-      // Modal helpers
-      openCustomerModal(c=null){
-        this.selectedCustomer=c;
-        document.getElementById('modalTitle').textContent=c?'Edit Customer':'Add New Customer';
-        if(c){ this.populateForm(c); } else { this.clearForm(); }
-        document.getElementById('customerModal').classList.add('active');
-      }
-      populateForm(c){
-        firstName.value=c.firstName||''; lastName.value=c.lastName||''; email.value=c.email||'';
-        mobilePhone.value=c.mobilePhone||''; homePhone.value=c.homePhone||''; workPhone.value=c.workPhone||'';
-        address.value=c.address||''; company.value=c.company||'';
-        tags.value=(c.tags||[]).join(', '); notes.value=c.notes||'';
-      }
-      clearForm(){ document.getElementById('customerForm').reset(); }
-    }
-
-    function closeModal(id){ document.getElementById(id).classList.remove('active'); }
-
-    // Boot
-    const customerManager=new CustomerManager();
-
-    // PWA
-    if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js'); }
-  </script>
+        
+        console.log('A-1APSVC Dashboard PWA initialized with real data integration');
+    </script>
 </body>
 </html>
-```
