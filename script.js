@@ -299,7 +299,7 @@ if (typeof module !== 'undefined' && module.exports) {
 // Enhanced Dashboard Integration
 class DashboardIntegration {
     constructor() {
-        this.customerSystemUrl = 'https://johnniesue.github.io/a1apsvc-dashboard-customers/';
+        this.customerSystemUrl = 'https://a-1apsvc.com/';
         this.init();
     }
 
