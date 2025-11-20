@@ -76,6 +76,40 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        #user-info {
+            opacity: 0.9;
+        }
+
+        .signout-button {
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease, transform 0.1s ease;
+        }
+
+        .signout-button:hover {
+            background: #ffffff;
+            color: #0056b3;
+            transform: translateY(-1px);
+        }
         
         .main-container {
             max-width: 1200px;
@@ -487,17 +521,17 @@
                 gap: 1rem;
                 text-align: center;
             }
-            
-            .metrics-grid {
-                grid-template-columns: 1fr;
+
+            .header-right {
+                flex-direction: column;
             }
-            
-            .sections-grid {
-                grid-template-columns: 1fr;
-            }
-            
+
             .actions-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .user-controls {
+                justify-content: center;
             }
         }
     </style>
@@ -511,18 +545,56 @@
                     <p class="company-subtitle">Professional Service Management</p>
                 </div>
             </div>
-            <div class="status-indicator">
-                <div class="status-dot"></div>
-                <span>Online</span>
+            <div class="header-right">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Online</span>
+                </div>
+                <div class="user-controls">
+                    <div id="user-info"></div>
+                    <button id="signout-button" class="signout-button">Sign Out</button>
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="main-container">
+    <!-- Login Section -->
+    <section id="auth-section" style="padding:2rem;">
+        <div style="max-width:400px; margin:0 auto; background:#ffffff; border-radius:12px; padding:2rem; box-shadow:0 1px 3px rgba(0,0,0,0.1); border:1px solid #e2e8f0;">
+            <h2 style="margin-top:0; margin-bottom:1rem; font-size:1.25rem; color:#1e293b;">
+                Sign in to A-1APSVC Dashboard
+            </h2>
+            <form id="login-form" style="display:flex; flex-direction:column; gap:0.75rem;">
+                <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="Email" 
+                    required
+                    style="padding:0.6rem 0.75rem; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;"
+                />
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Password" 
+                    required
+                    style="padding:0.6rem 0.75rem; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem;"
+                />
+                <button 
+                    type="submit"
+                    style="margin-top:0.5rem; padding:0.7rem 1rem; border-radius:8px; border:none; background:#007ACC; color:#ffffff; font-weight:500; font-size:0.95rem; cursor:pointer;"
+                >
+                    Log In
+                </button>
+            </form>
+            <p id="auth-message" style="margin-top:0.75rem; font-size:0.875rem; color:#b91c1c;"></p>
+        </div>
+    </section>
+
+    <main class="main-container" id="dashboard" style="display:none;">
         <div class="welcome-section">
             <div class="welcome-header">
-                <h2 class="welcome-title">
-                    👋 Hi, Chris
+                <h2 class="welcome-title" id="greeting">
+                    👋 Hi, [User]
                 </h2>
                 <div class="date-time" id="currentDateTime"></div>
             </div>
@@ -814,6 +886,98 @@
         }
         
         console.log('A-1APSVC Dashboard PWA initialized with real data integration');
+    </script>
+
+    <!-- Supabase Auth Script -->
+    <script type="module">
+      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+      const SUPABASE_URL = 'https://zzigzylypifjokskehkn.supabase.co'
+      const SUPABASE_ANON_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp6aWd6eWx5cGlmam9rc2tlaGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyODEzNDAsImV4cCI6MjA2Nzg1NzM0MH0.UjSODSs-tWPmXxKkyuaSIvSutx5dCnJsMhzslbFaBUg'
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      window.supabase = supabase
+
+      const loginForm = document.getElementById('login-form')
+      const authSection = document.getElementById('auth-section')
+      const dashboard = document.getElementById('dashboard')
+      const greeting = document.getElementById('greeting')
+      const userInfo = document.getElementById('user-info')
+      const signOutButton = document.getElementById('signout-button')
+      const authMessage = document.getElementById('auth-message')
+
+      function onLogin(user) {
+        if (!authSection || !dashboard || !greeting || !userInfo) return
+
+        authSection.style.display = 'none'
+        dashboard.style.display = 'block'
+
+        const nameFromMeta = user.user_metadata?.full_name
+        const nameFromEmail = user.email ? user.email.split('@')[0] : 'User'
+        const displayName = nameFromMeta || nameFromEmail
+
+        greeting.textContent = `👋 Hi, ${displayName}`
+        userInfo.textContent = `Logged in as ${user.email}`
+      }
+
+      function onLogout() {
+        if (!authSection || !dashboard || !greeting || !userInfo) return
+
+        authSection.style.display = 'block'
+        dashboard.style.display = 'none'
+        greeting.textContent = '👋 Hi, [User]'
+        userInfo.textContent = ''
+      }
+
+      // Check session on load
+      supabase.auth.getSession().then(({ data, error }) => {
+        if (error) {
+          console.error('Error getting session:', error)
+          onLogout()
+          return
+        }
+
+        if (data?.session?.user) {
+          onLogin(data.session.user)
+        } else {
+          onLogout()
+        }
+      })
+
+      // Listen for auth state changes
+      supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) {
+          onLogin(session.user)
+        } else {
+          onLogout()
+        }
+      })
+
+      // Login form submit
+      if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault()
+          const email = document.getElementById('email').value
+          const password = document.getElementById('password').value
+
+          authMessage.textContent = 'Logging in...'
+
+          const { error } = await supabase.auth.signInWithPassword({ email, password })
+          if (error) {
+            authMessage.textContent = 'Login failed: ' + error.message
+          } else {
+            authMessage.textContent = ''
+          }
+        })
+      }
+
+      // Sign out
+      if (signOutButton) {
+        signOutButton.addEventListener('click', async () => {
+          await supabase.auth.signOut()
+        })
+      }
     </script>
 </body>
 </html>
