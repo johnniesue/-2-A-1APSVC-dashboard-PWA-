@@ -1,79 +1,142 @@
-(() => {
-  const grid = document.getElementById('grid');
-  const msg = document.getElementById('msg');
-  const q = document.getElementById('q');
-  const countEl = document.getElementById('count');
-  const shownEl = document.getElementById('shown');
+// customers.js (Option A - static JSON on GitHub Pages)
 
-  let customers = [];
+const DATA_URL = "./data/customers.json"; // ✅ correct for GitHub Pages in a repo subfolder
 
-  function escapeHtml(str) {
-    return String(str ?? '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
+const els = {
+  q: document.getElementById("q"),
+  msg: document.getElementById("msg"),
+  grid: document.getElementById("grid"),
+  count: document.getElementById("count"),
+  shown: document.getElementById("shown"),
+};
+
+let allCustomers = [];
+
+function safe(v) {
+  return (v ?? "").toString().trim();
+}
+
+function normalize(s) {
+  return safe(s).toLowerCase();
+}
+
+function customerText(c) {
+  // Try common fields; your JSON may vary depending on export
+  const name =
+    safe(c.name) ||
+    [c.firstName, c.lastName].filter(Boolean).join(" ").trim() ||
+    safe(c.fullName);
+
+  const phone = safe(c.phone) || safe(c.mobile) || safe(c.phoneNumber);
+  const email = safe(c.email);
+  const address =
+    safe(c.address) ||
+    safe(c.street) ||
+    [c.address1, c.address2].filter(Boolean).join(" ").trim();
+
+  const city = safe(c.city);
+  const state = safe(c.state);
+  const zip = safe(c.zip) || safe(c.postalCode);
+
+  return normalize([name, phone, email, address, city, state, zip].join(" "));
+}
+
+function render(customers) {
+  els.grid.innerHTML = "";
+
+  customers.forEach((c) => {
+    const name =
+      safe(c.name) ||
+      [c.firstName, c.lastName].filter(Boolean).join(" ").trim() ||
+      safe(c.fullName) ||
+      "Unnamed Customer";
+
+    const phone = safe(c.phone) || safe(c.mobile) || safe(c.phoneNumber) || "—";
+    const email = safe(c.email) || "—";
+
+    const street =
+      safe(c.address) ||
+      safe(c.street) ||
+      safe(c.address1) ||
+      "—";
+
+    const city = safe(c.city) || "—";
+    const state = safe(c.state) || "—";
+    const zip = safe(c.zip) || safe(c.postalCode) || "—";
+
+    const tags = [];
+    if (!safe(c.email)) tags.push("Missing email");
+    if (!safe(c.phone) && !safe(c.mobile) && !safe(c.phoneNumber)) tags.push("Missing phone");
+    if (street === "—") tags.push("Missing address");
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <p class="name">${escapeHtml(name)}</p>
+      <p class="line"><strong>Phone:</strong> ${escapeHtml(phone)}</p>
+      <p class="line"><strong>Email:</strong> ${escapeHtml(email)}</p>
+      <p class="line"><strong>Address:</strong> ${escapeHtml(street)}</p>
+      <p class="line"><strong>City/State/ZIP:</strong> ${escapeHtml(city)}, ${escapeHtml(state)} ${escapeHtml(zip)}</p>
+      ${tags.length ? `<div class="tagrow">${tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+    `;
+    els.grid.appendChild(card);
+  });
+
+  els.shown.textContent = String(customers.length);
+}
+
+function escapeHtml(str) {
+  return safe(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function showError(message) {
+  els.msg.style.display = "block";
+  els.msg.textContent = message;
+}
+
+function hideError() {
+  els.msg.style.display = "none";
+  els.msg.textContent = "";
+}
+
+function applySearch() {
+  const q = normalize(els.q.value);
+  if (!q) {
+    render(allCustomers);
+    return;
   }
+  const filtered = allCustomers.filter((c) => customerText(c).includes(q));
+  render(filtered);
+}
 
-  function bestAddress(c) {
-    const a = (c.addresses && c.addresses.length) ? c.addresses[0] : null;
-    if (!a) return '';
-    const parts = [a.street1, a.street2, a.city, a.state, a.postalCode].filter(Boolean);
-    return parts.join(', ');
+async function loadCustomers() {
+  hideError();
+
+  try {
+    const res = await fetch(DATA_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+
+    const data = await res.json();
+
+    // Accept either: [ ...customers ] OR { customers: [ ... ] }
+    allCustomers = Array.isArray(data) ? data : (data.customers || []);
+
+    els.count.textContent = String(allCustomers.length);
+    render(allCustomers);
+
+  } catch (err) {
+    console.error(err);
+    showError(
+      `Could not load customer data. Confirm this file exists and is reachable:\n${DATA_URL}\n\nError: ${err.message}`
+    );
   }
+}
 
-  function searchText(c) {
-    const addr = bestAddress(c);
-    const tags = (c.tags || []).join(' ');
-    return [
-      c.name, c.displayName, c.firstName, c.lastName,
-      c.company, c.email, c.phone, addr, tags,
-      c.lastServiceDate, c.id
-    ].filter(Boolean).join(' ').toLowerCase();
-  }
+els.q.addEventListener("input", applySearch);
 
-  function render(list) {
-    grid.innerHTML = list.map(c => {
-      const addr = bestAddress(c);
-      const tags = (c.tags || []).slice(0, 6);
-      return `
-        <section class="card">
-          <p class="name">${escapeHtml(c.name || 'Unnamed Customer')}</p>
-          ${c.company ? `<p class="line"><strong>Company:</strong> ${escapeHtml(c.company)}</p>` : ``}
-          ${c.phone ? `<p class="line"><strong>Phone:</strong> ${escapeHtml(c.phone)}</p>` : ``}
-          ${c.email ? `<p class="line"><strong>Email:</strong> ${escapeHtml(c.email)}</p>` : ``}
-          ${addr ? `<p class="line"><strong>Address:</strong> ${escapeHtml(addr)}</p>` : `<p class="line"><strong>Address:</strong> <span class="muted">None on file</span></p>`}
-          ${c.lastServiceDate ? `<p class="line"><strong>Last service:</strong> ${escapeHtml(c.lastServiceDate)}</p>` : ``}
-          ${tags.length ? `<div class="tagrow">${tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>` : ``}
-        </section>
-      `;
-    }).join('');
-    shownEl.textContent = String(list.length);
-  }
-
-  function applyFilter() {
-    const term = (q.value || '').trim().toLowerCase();
-    if (!term) return render(customers);
-    const filtered = customers.filter(c => searchText(c).includes(term));
-    render(filtered);
-  }
-
-  async function init() {
-    try {
-      // IMPORTANT: This path assumes you create /data/customers.json in the same repo
-      const res = await fetch('./data/customers.json', { cache: 'no-store' });
-      if (!res.ok) throw new Error(`Could not load customers.json (HTTP ${res.status})`);
-      customers = await res.json();
-      countEl.textContent = String(customers.length);
-      render(customers);
-      q.addEventListener('input', applyFilter);
-    } catch (e) {
-      msg.style.display = 'block';
-      msg.textContent = `Customer data not available. ${e?.message || e}`;
-      console.error(e);
-    }
-  }
-
-  init();
-})();
+loadCustomers();
