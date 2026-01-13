@@ -1,13 +1,13 @@
 [
   {
-    "firstName": "John",
-    "lastName": "Doe",
+    "firstName": "Chris",
+    "lastName": "Crabtree",
     "phone": "4694919171",
     "email": "A1apsvc@gmail.com",
-    "address": "",
-    "city": "nan",
-    "state": "nan",
-    "zip": "nan"
+    "address": "320 McMillen Rd.",
+    "city": "Lucas",
+    "state": "TX",
+    "zip": "75002"
   },
   {
     "firstName": "Frank",
