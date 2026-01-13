@@ -39,7 +39,7 @@
     <div class="top">
       <div class="brand">
         <h1>Customer Management</h1>
-        <p>Static data mode (GitHub Pages)</p>
+        <p>Supabase live data</p>
       </div>
       <div class="actions" style="flex:1; justify-content:flex-end;">
         <div class="search">
@@ -51,7 +51,7 @@
     <div class="stats">
       <div class="pill"><span id="count">0</span> customers loaded</div>
       <div class="pill"><span id="shown">0</span> shown</div>
-      <div class="pill">Data file: <span class="muted">/data/customers.json</span></div>
+      <div class="pill">Source: <span class="muted">Supabase public.customers</span></div>
     </div>
   </div>
 </header>
@@ -59,11 +59,86 @@
 <main class="wrap">
   <div id="msg" class="error" style="display:none;"></div>
   <div id="grid" class="grid"></div>
-  <footer>
-    Tip: If you don’t see customers, confirm the file exists at <span class="muted">/data/customers.json</span> in your repo.
+  <footer class="muted">
+    If customers don’t load, it usually means you’re not logged in (no Supabase access token found) or RLS is blocking reads.
   </footer>
 </main>
 
-<script src="./customers.js"></script>
+<!-- ✅ NEW: Supabase customers data layer -->
+<script src="./customer-data.js"></script>
+
+<script>
+  let ALL = [];
+
+  function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
+  function customerSearchBlob(c){
+    return [
+      c.first_name, c.last_name, c.email,
+      c.mobile_phone, c.home_phone, c.work_phone,
+      c.address, c.city, c.state, c.zip,
+      c.company, (Array.isArray(c.tags) ? c.tags.join(" ") : c.tags),
+      c.notes
+    ].map(norm).join(" ");
+  }
+
+  function render(list){
+    const grid = document.getElementById("grid");
+    const shown = document.getElementById("shown");
+    shown.textContent = list.length;
+
+    if (!list.length){
+      grid.innerHTML = `<div class="card"><p class="line"><strong>No customers found.</strong></p><p class="line">Try a different search.</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(c => {
+      const name = `${c.first_name || ""} ${c.last_name || ""}`.trim() || "(No name)";
+      const phone = c.mobile_phone || c.home_phone || c.work_phone || "";
+      const addr = [c.address, c.city, c.state, c.zip].filter(Boolean).join(", ");
+      const tags = Array.isArray(c.tags) ? c.tags : (c.tags ? String(c.tags).split(",").map(t=>t.trim()).filter(Boolean) : []);
+      return `
+        <div class="card">
+          <p class="name">${escapeHtml(name)}</p>
+          <p class="line"><strong>Email:</strong> ${escapeHtml(c.email || "")}</p>
+          <p class="line"><strong>Phone:</strong> ${escapeHtml(phone || "")}</p>
+          <p class="line"><strong>Address:</strong> ${escapeHtml(addr || "")}</p>
+          ${c.company ? `<p class="line"><strong>Company:</strong> ${escapeHtml(c.company)}</p>` : ""}
+          ${tags.length ? `<div class="tagrow">${tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+        </div>
+      `;
+    }).join("");
+  }
+
+  function escapeHtml(str){
+    return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+
+  function setMsg(text){
+    const el = document.getElementById("msg");
+    el.style.display = text ? "block" : "none";
+    el.textContent = text || "";
+  }
+
+  async function loadCustomers(){
+    try{
+      setMsg("");
+      // ✅ This function is in customer-data.js (your Supabase version)
+      ALL = await initializeCustomerData();
+      document.getElementById("count").textContent = ALL.length;
+      render(ALL);
+    } catch (e){
+      console.error(e);
+      setMsg("Could not load customers from Supabase. Are you logged in on this dashboard and allowed by RLS?");
+    }
+  }
+
+  document.getElementById("q").addEventListener("input", (e) => {
+    const q = norm(e.target.value);
+    const filtered = !q ? ALL : ALL.filter(c => customerSearchBlob(c).includes(q));
+    render(filtered);
+  });
+
+  loadCustomers();
+</script>
 </body>
 </html>
