@@ -1,0 +1,12 @@
+[
+  {
+    "firstName": "Test",
+    "lastName": "Customer",
+    "phone": "469-000-0000",
+    "email": "test@example.com",
+    "address": "123 Main St",
+    "city": "Plano",
+    "state": "TX",
+    "zip": "75023"
+  }
+]
