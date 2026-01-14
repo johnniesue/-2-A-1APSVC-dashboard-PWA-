@@ -64,27 +64,50 @@
   </footer>
 </main>
 
-<!-- ✅ Supabase customers data layer (must exist at repo root as customer-data.js) -->
+<!-- Supabase customers data layer -->
 <script src="./customer-data.js"></script>
 
 <script>
   let ALL = [];
 
   function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
+
+  // ✅ Support BOTH naming styles (snake_case and camelCase)
+  function firstNameOf(c){ return c.first_name ?? c.firstName ?? ""; }
+  function lastNameOf(c){ return c.last_name ?? c.lastName ?? ""; }
+  function emailOf(c){ return c.email ?? ""; }
+  function phoneOf(c){ return c.mobile_phone ?? c.mobilePhone ?? c.home_phone ?? c.homePhone ?? c.work_phone ?? c.workPhone ?? ""; }
+  function addressOf(c){ return c.address ?? ""; }
+  function companyOf(c){ return c.company ?? ""; }
+  function tagsOf(c){
+    const t = c.tags ?? [];
+    if (Array.isArray(t)) return t;
+    if (!t) return [];
+    return String(t).split(",").map(x=>x.trim()).filter(Boolean);
+  }
+
   function customerSearchBlob(c){
     return [
-      c.first_name, c.last_name, c.email,
-      c.mobile_phone, c.home_phone, c.work_phone,
-      c.address, c.city, c.state, c.zip,
-      c.company, (Array.isArray(c.tags) ? c.tags.join(" ") : c.tags),
+      firstNameOf(c), lastNameOf(c),
+      emailOf(c),
+      c.mobile_phone, c.mobilePhone,
+      c.home_phone, c.homePhone,
+      c.work_phone, c.workPhone,
+      c.address, c.street1, c.street2,
+      c.city, c.state, c.zip,
+      companyOf(c),
+      tagsOf(c).join(" "),
       c.notes
     ].map(norm).join(" ");
   }
 
+  function escapeHtml(str){
+    return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+
   function render(list){
     const grid = document.getElementById("grid");
-    const shown = document.getElementById("shown");
-    shown.textContent = list.length;
+    document.getElementById("shown").textContent = list.length;
 
     if (!list.length){
       grid.innerHTML = `<div class="card"><p class="line"><strong>No customers found.</strong></p><p class="line">Try a different search.</p></div>`;
@@ -92,25 +115,23 @@
     }
 
     grid.innerHTML = list.map(c => {
-      const name = `${c.first_name || ""} ${c.last_name || ""}`.trim() || "(No name)";
-      const phone = c.mobile_phone || c.home_phone || c.work_phone || "";
-      const addr = [c.address, c.city, c.state, c.zip].filter(Boolean).join(", ");
-      const tags = Array.isArray(c.tags) ? c.tags : (c.tags ? String(c.tags).split(",").map(t=>t.trim()).filter(Boolean) : []);
+      const name = `${firstNameOf(c)} ${lastNameOf(c)}`.trim() || "(No name)";
+      const phone = phoneOf(c);
+      const addr = addressOf(c);
+      const company = companyOf(c);
+      const tags = tagsOf(c);
+
       return `
         <div class="card">
           <p class="name">${escapeHtml(name)}</p>
-          <p class="line"><strong>Email:</strong> ${escapeHtml(c.email || "")}</p>
-          <p class="line"><strong>Phone:</strong> ${escapeHtml(phone || "")}</p>
-          <p class="line"><strong>Address:</strong> ${escapeHtml(addr || "")}</p>
-          ${c.company ? `<p class="line"><strong>Company:</strong> ${escapeHtml(c.company)}</p>` : ""}
+          <p class="line"><strong>Email:</strong> ${escapeHtml(emailOf(c))}</p>
+          <p class="line"><strong>Phone:</strong> ${escapeHtml(phone)}</p>
+          <p class="line"><strong>Address:</strong> ${escapeHtml(addr)}</p>
+          ${company ? `<p class="line"><strong>Company:</strong> ${escapeHtml(company)}</p>` : ""}
           ${tags.length ? `<div class="tagrow">${tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
         </div>
       `;
     }).join("");
-  }
-
-  function escapeHtml(str){
-    return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
   }
 
   function setMsg(text){
@@ -122,7 +143,6 @@
   async function loadCustomers(){
     try{
       setMsg("");
-      // initializeCustomerData() must be defined in customer-data.js
       ALL = await initializeCustomerData();
       document.getElementById("count").textContent = ALL.length;
       render(ALL);
