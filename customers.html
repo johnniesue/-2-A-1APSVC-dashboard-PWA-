@@ -41,6 +41,16 @@
       font-size:14px;
     }
     .btn:hover{ border-color:rgba(255,255,255,.28); }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; }
+
+    .btnPrimary{
+      background:rgba(77,163,255,.16);
+      border:1px solid rgba(77,163,255,.40);
+    }
+    .btnDanger{
+      background:rgba(255,90,106,.12);
+      border:1px solid rgba(255,90,106,.35);
+    }
 
     .search{ flex:1; min-width:260px; }
     input{
@@ -89,15 +99,6 @@
     .name{ font-weight:750; margin:0 0 6px; font-size:16px;}
     .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35;}
     .line strong{ color:var(--text); font-weight:650;}
-    .tagrow{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
-    .tag{
-      font-size:12px;
-      padding:4px 8px;
-      border-radius:999px;
-      border:1px solid rgba(77,163,255,.35);
-      color:#cfe6ff;
-      background:rgba(77,163,255,.10);
-    }
 
     .error{
       background:rgba(255,90,106,.10);
@@ -106,10 +107,17 @@
       padding:12px;
       border-radius:14px;
     }
+    .ok{
+      background:rgba(77,163,255,.10);
+      border:1px solid rgba(77,163,255,.35);
+      color:#d7ecff;
+      padding:12px;
+      border-radius:14px;
+    }
     .muted{ color:var(--muted); }
     footer{ color:rgba(231,238,252,.55); font-size:12px; padding:12px 0 30px; }
 
-    /* ---------- Drawer (Customer Details) ---------- */
+    /* ---------- Drawer ---------- */
     .drawerOverlay{
       position:fixed;
       inset:0;
@@ -163,13 +171,34 @@
       gap:10px;
       flex-wrap:wrap;
     }
-    .btnPrimary{
-      background:rgba(77,163,255,.16);
-      border:1px solid rgba(77,163,255,.40);
+
+    /* Edit form */
+    .formGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:12px;
     }
-    .btnDanger{
-      background:rgba(255,90,106,.12);
-      border:1px solid rgba(255,90,106,.35);
+    .formGrid .full{ grid-column: 1 / -1; }
+    .field label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 6px;
+    }
+    .field input{
+      width:100%;
+      box-sizing:border-box;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      outline:none;
+    }
+    .divider{
+      margin:14px 0;
+      border-top:1px solid rgba(255,255,255,.10);
     }
   </style>
 </head>
@@ -205,10 +234,8 @@
   </footer>
 </main>
 
-<!-- Drawer Overlay -->
 <div id="drawerOverlay" class="drawerOverlay"></div>
 
-<!-- Customer Drawer -->
 <aside id="drawer" class="drawer" aria-hidden="true">
   <div class="drawerHeader">
     <div class="drawerTitle">
@@ -219,26 +246,75 @@
   </div>
 
   <div class="drawerBody">
-    <div class="kv">
-      <div class="k">Email</div><div class="v" id="d_email"></div>
-      <div class="k">Mobile</div><div class="v" id="d_mobile"></div>
-      <div class="k">Home</div><div class="v" id="d_home"></div>
-      <div class="k">Work</div><div class="v" id="d_work"></div>
-      <div class="k">Company</div><div class="v" id="d_company"></div>
-      <div class="k">Address</div><div class="v" id="d_address"></div>
-      <div class="k">ID</div><div class="v" id="d_id"></div>
+    <div id="drawerMsg" class="ok" style="display:none;"></div>
+
+    <!-- Read-only view -->
+    <div id="viewBox">
+      <div class="kv">
+        <div class="k">Email</div><div class="v" id="d_email"></div>
+        <div class="k">Mobile</div><div class="v" id="d_mobile"></div>
+        <div class="k">Home</div><div class="v" id="d_home"></div>
+        <div class="k">Work</div><div class="v" id="d_work"></div>
+        <div class="k">Company</div><div class="v" id="d_company"></div>
+        <div class="k">Address</div><div class="v" id="d_address"></div>
+        <div class="k">ID</div><div class="v" id="d_id"></div>
+      </div>
+
+      <div class="drawerActions">
+        <button class="btn btnPrimary" id="btnCopyEmail" type="button">Copy Email</button>
+        <button class="btn btnPrimary" id="btnCopyPhone" type="button">Copy Phone</button>
+        <button class="btn btnDanger" id="btnDelete" type="button">Delete</button>
+        <button class="btn" id="btnEdit" type="button">Edit</button>
+      </div>
     </div>
 
-    <div class="drawerActions">
-      <button class="btn btnPrimary" id="btnCopyEmail" type="button">Copy Email</button>
-      <button class="btn btnPrimary" id="btnCopyPhone" type="button">Copy Phone</button>
-      <button class="btn btnDanger" id="btnDelete" type="button" disabled title="Next step">Delete (next)</button>
-      <button class="btn" id="btnEdit" type="button" disabled title="Next step">Edit (next)</button>
+    <!-- Edit view -->
+    <div id="editBox" style="display:none;">
+      <div class="formGrid">
+        <div class="field">
+          <label>First name</label>
+          <input id="f_first" type="text" />
+        </div>
+        <div class="field">
+          <label>Last name</label>
+          <input id="f_last" type="text" />
+        </div>
+        <div class="field full">
+          <label>Email</label>
+          <input id="f_email" type="email" />
+        </div>
+        <div class="field">
+          <label>Mobile</label>
+          <input id="f_mobile" type="text" />
+        </div>
+        <div class="field">
+          <label>Home</label>
+          <input id="f_home" type="text" />
+        </div>
+        <div class="field full">
+          <label>Work</label>
+          <input id="f_work" type="text" />
+        </div>
+        <div class="field full">
+          <label>Company</label>
+          <input id="f_company" type="text" />
+        </div>
+        <div class="field full">
+          <label>Address (single line)</label>
+          <input id="f_address" type="text" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="drawerActions">
+        <button class="btn btnPrimary" id="btnSave" type="button">Save</button>
+        <button class="btn" id="btnCancelEdit" type="button">Cancel</button>
+      </div>
     </div>
   </div>
 </aside>
 
-<!-- ✅ Supabase customers data layer -->
 <script src="./customer-data.js"></script>
 
 <script>
@@ -247,9 +323,6 @@
 
   function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
 
-  // Supports BOTH shapes:
-  // - camelCase (firstName/lastName) from UI mapping
-  // - snake_case (first_name/last_name) if any old data slips in
   function getFirst(c){ return c?.firstName ?? c?.first_name ?? ""; }
   function getLast(c){ return c?.lastName ?? c?.last_name ?? ""; }
   function getEmail(c){ return c?.email ?? ""; }
@@ -280,6 +353,13 @@
     el.textContent = text || "";
   }
 
+  function setDrawerMsg(text){
+    const el = document.getElementById("drawerMsg");
+    el.style.display = text ? "block" : "none";
+    el.textContent = text || "";
+    if (text) setTimeout(() => { el.style.display = "none"; }, 1800);
+  }
+
   function render(list){
     const grid = document.getElementById("grid");
     document.getElementById("shown").textContent = list.length;
@@ -305,7 +385,6 @@
       `;
     }).join("");
 
-    // Click handling (event delegation)
     grid.onclick = (e) => {
       const card = e.target.closest(".card");
       if (!card) return;
@@ -315,9 +394,7 @@
     };
   }
 
-  function openDrawer(c){
-    SELECTED = c;
-
+  function fillDrawer(c){
     const name = `${getFirst(c)} ${getLast(c)}`.trim() || "(No name)";
     document.getElementById("d_name").textContent = name;
     document.getElementById("d_email").textContent = getEmail(c) || "";
@@ -327,6 +404,12 @@
     document.getElementById("d_company").textContent = getCompany(c) || "";
     document.getElementById("d_address").textContent = getAddress(c) || "";
     document.getElementById("d_id").textContent = c.id || "";
+  }
+
+  function openDrawer(c){
+    SELECTED = c;
+    fillDrawer(c);
+    showViewMode();
 
     const overlay = document.getElementById("drawerOverlay");
     const drawer = document.getElementById("drawer");
@@ -342,6 +425,36 @@
     drawer.classList.remove("open");
     drawer.setAttribute("aria-hidden","true");
     SELECTED = null;
+  }
+
+  function showViewMode(){
+    document.getElementById("viewBox").style.display = "block";
+    document.getElementById("editBox").style.display = "none";
+  }
+
+  function showEditMode(){
+    if (!SELECTED) return;
+
+    document.getElementById("f_first").value = getFirst(SELECTED) || "";
+    document.getElementById("f_last").value  = getLast(SELECTED) || "";
+    document.getElementById("f_email").value = getEmail(SELECTED) || "";
+    document.getElementById("f_mobile").value = getMobile(SELECTED) || "";
+    document.getElementById("f_home").value = getHome(SELECTED) || "";
+    document.getElementById("f_work").value = getWork(SELECTED) || "";
+    document.getElementById("f_company").value = getCompany(SELECTED) || "";
+    document.getElementById("f_address").value = getAddress(SELECTED) || "";
+
+    document.getElementById("viewBox").style.display = "none";
+    document.getElementById("editBox").style.display = "block";
+  }
+
+  function updateLocalCustomer(id, newObj){
+    const idx = ALL.findIndex(x => String(x.id) === String(id));
+    if (idx >= 0) ALL[idx] = newObj;
+  }
+
+  function removeLocalCustomer(id){
+    ALL = ALL.filter(x => String(x.id) !== String(id));
   }
 
   async function loadCustomers(){
@@ -372,14 +485,83 @@
   document.getElementById("btnCopyEmail").addEventListener("click", async () => {
     const val = document.getElementById("d_email").textContent.trim();
     if (!val) return;
-    try{ await navigator.clipboard.writeText(val); } catch {}
+    try{ await navigator.clipboard.writeText(val); setDrawerMsg("Email copied"); } catch {}
   });
 
   document.getElementById("btnCopyPhone").addEventListener("click", async () => {
     if (!SELECTED) return;
     const val = (getMobile(SELECTED) || getHome(SELECTED) || getWork(SELECTED) || "").trim();
     if (!val) return;
-    try{ await navigator.clipboard.writeText(val); } catch {}
+    try{ await navigator.clipboard.writeText(val); setDrawerMsg("Phone copied"); } catch {}
+  });
+
+  // Edit
+  document.getElementById("btnEdit").addEventListener("click", () => {
+    showEditMode();
+  });
+
+  document.getElementById("btnCancelEdit").addEventListener("click", () => {
+    showViewMode();
+  });
+
+  document.getElementById("btnSave").addEventListener("click", async () => {
+    if (!SELECTED) return;
+
+    const payload = {
+      firstName: document.getElementById("f_first").value.trim(),
+      lastName: document.getElementById("f_last").value.trim(),
+      email: document.getElementById("f_email").value.trim(),
+      mobilePhone: document.getElementById("f_mobile").value.trim(),
+      homePhone: document.getElementById("f_home").value.trim(),
+      workPhone: document.getElementById("f_work").value.trim(),
+      company: document.getElementById("f_company").value.trim(),
+      address: document.getElementById("f_address").value.trim(),
+    };
+
+    try{
+      const updated = await updateCustomerInSupabase(SELECTED.id, payload);
+      if (!updated) throw new Error("Update did not return a customer.");
+
+      updateLocalCustomer(SELECTED.id, updated);
+      SELECTED = updated;
+      fillDrawer(updated);
+
+      // refresh list UI
+      const q = norm(document.getElementById("q").value);
+      const filtered = !q ? ALL : ALL.filter(c => customerSearchBlob(c).includes(q));
+      render(filtered);
+
+      setDrawerMsg("Saved");
+      showViewMode();
+    } catch (e){
+      console.error(e);
+      alert("Save failed. This usually means RLS is blocking UPDATE for your user.\n\n" + (e?.message || e));
+    }
+  });
+
+  // Delete
+  document.getElementById("btnDelete").addEventListener("click", async () => {
+    if (!SELECTED) return;
+
+    const name = (`${getFirst(SELECTED)} ${getLast(SELECTED)}`).trim() || "(No name)";
+    const ok = confirm(`Delete customer: ${name}?\n\nThis cannot be undone.`);
+    if (!ok) return;
+
+    try{
+      await deleteCustomerInSupabase(SELECTED.id);
+
+      removeLocalCustomer(SELECTED.id);
+
+      const q = norm(document.getElementById("q").value);
+      const filtered = !q ? ALL : ALL.filter(c => customerSearchBlob(c).includes(q));
+      document.getElementById("count").textContent = ALL.length;
+      render(filtered);
+
+      closeDrawer();
+    } catch (e){
+      console.error(e);
+      alert("Delete failed. This usually means RLS is blocking DELETE for your user.\n\n" + (e?.message || e));
+    }
   });
 
   loadCustomers();
