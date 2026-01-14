@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>A-1APSVC • Customers</title>
+
   <style>
     :root { --bg:#0b1220; --card:#111b2e; --muted:#93a4c7; --text:#e7eefc; --accent:#4da3ff; --danger:#ff5a6a; }
 
@@ -40,17 +41,6 @@
       text-decoration:none;
       font-size:14px;
     }
-    .btn:hover{ border-color:rgba(255,255,255,.28); }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; }
-
-    .btnPrimary{
-      background:rgba(77,163,255,.16);
-      border:1px solid rgba(77,163,255,.40);
-    }
-    .btnDanger{
-      background:rgba(255,90,106,.12);
-      border:1px solid rgba(255,90,106,.35);
-    }
 
     .search{ flex:1; min-width:260px; }
     input{
@@ -60,9 +50,7 @@
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.06);
       color:var(--text);
-      outline:none;
     }
-    input::placeholder{ color:rgba(231,238,252,.55); }
 
     .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
     .pill{
@@ -86,19 +74,11 @@
       border:1px solid rgba(255,255,255,.10);
       border-radius:16px;
       padding:14px;
-      box-shadow:0 10px 30px rgba(0,0,0,.25);
       cursor:pointer;
-      transition: transform .08s ease, border-color .08s ease;
     }
-    .card:hover{
-      transform: translateY(-1px);
-      border-color: rgba(77,163,255,.35);
-    }
-    .card:active{ transform: translateY(0px) scale(.995); }
 
     .name{ font-weight:750; margin:0 0 6px; font-size:16px;}
-    .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35;}
-    .line strong{ color:var(--text); font-weight:650;}
+    .line{ margin:0; font-size:13px; color:var(--muted); }
 
     .error{
       background:rgba(255,90,106,.10);
@@ -107,103 +87,13 @@
       padding:12px;
       border-radius:14px;
     }
-    .ok{
-      background:rgba(77,163,255,.10);
-      border:1px solid rgba(77,163,255,.35);
-      color:#d7ecff;
-      padding:12px;
-      border-radius:14px;
-    }
-    .muted{ color:var(--muted); }
+
     footer{ color:rgba(231,238,252,.55); font-size:12px; padding:12px 0 30px; }
-
-    /* ---------- Drawer ---------- */
-    .drawerOverlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.45);
-      display:none;
-      z-index:50;
-    }
-    .drawer{
-      position:fixed;
-      top:0; right:0;
-      height:100%;
-      width:min(520px, 92vw);
-      background:rgba(11,18,32,.98);
-      border-left:1px solid rgba(255,255,255,.10);
-      box-shadow:-20px 0 60px rgba(0,0,0,.45);
-      transform: translateX(100%);
-      transition: transform .18s ease;
-      z-index:60;
-      display:flex;
-      flex-direction:column;
-    }
-    .drawer.open{ transform: translateX(0); }
-    .drawerHeader{
-      padding:16px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .drawerTitle h2{ margin:0; font-size:18px; font-weight:800; }
-    .drawerTitle p{ margin:4px 0 0; font-size:12px; color:var(--muted); }
-    .drawerBody{ padding:16px; overflow:auto; }
-
-    .kv{
-      display:grid;
-      grid-template-columns: 110px 1fr;
-      gap:10px 12px;
-      padding:12px;
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:16px;
-      background:rgba(255,255,255,.04);
-      margin-bottom:12px;
-    }
-    .k{ color:var(--muted); font-size:12px; }
-    .v{ color:var(--text); font-size:13px; word-break:break-word; }
-
-    .drawerActions{
-      margin-top:12px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    /* Edit form */
-    .formGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-      margin-top:12px;
-    }
-    .formGrid .full{ grid-column: 1 / -1; }
-    .field label{
-      display:block;
-      font-size:12px;
-      color:var(--muted);
-      margin:0 0 6px;
-    }
-    .field input{
-      width:100%;
-      box-sizing:border-box;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      outline:none;
-    }
-    .divider{
-      margin:14px 0;
-      border-top:1px solid rgba(255,255,255,.10);
-    }
   </style>
 </head>
 
 <body>
+
 <header>
   <div class="wrap">
     <div class="top">
@@ -213,15 +103,15 @@
       </div>
       <div class="actions" style="flex:1; justify-content:flex-end;">
         <div class="search">
-          <input id="q" type="search" placeholder="Search name, phone, email, city, street..." />
+          <input id="q" type="search" placeholder="Search name, phone, email..." />
         </div>
         <a class="btn" href="./index.html">Back to Dashboard</a>
       </div>
     </div>
+
     <div class="stats">
       <div class="pill"><span id="count">0</span> customers loaded</div>
       <div class="pill"><span id="shown">0</span> shown</div>
-      <div class="pill">Source: <span class="muted">Supabase public.customers</span></div>
     </div>
   </div>
 </header>
@@ -229,342 +119,63 @@
 <main class="wrap">
   <div id="msg" class="error" style="display:none;"></div>
   <div id="grid" class="grid"></div>
-  <footer class="muted">
-    If customers don’t load, it usually means you’re not logged in (no Supabase access token found) or RLS is blocking reads.
-  </footer>
+  <footer>If customers don’t load, check login or RLS.</footer>
 </main>
-
-<div id="drawerOverlay" class="drawerOverlay"></div>
-
-<aside id="drawer" class="drawer" aria-hidden="true">
-  <div class="drawerHeader">
-    <div class="drawerTitle">
-      <h2 id="d_name">(No name)</h2>
-      <p id="d_sub">Customer Details</p>
-    </div>
-    <button class="btn" id="btnCloseDrawer" type="button">Close</button>
-  </div>
-
-  <div class="drawerBody">
-    <div id="drawerMsg" class="ok" style="display:none;"></div>
-
-    <!-- Read-only view -->
-    <div id="viewBox">
-      <div class="kv">
-        <div class="k">Email</div><div class="v" id="d_email"></div>
-        <div class="k">Mobile</div><div class="v" id="d_mobile"></div>
-        <div class="k">Home</div><div class="v" id="d_home"></div>
-        <div class="k">Work</div><div class="v" id="d_work"></div>
-        <div class="k">Company</div><div class="v" id="d_company"></div>
-        <div class="k">Address</div><div class="v" id="d_address"></div>
-        <div class="k">ID</div><div class="v" id="d_id"></div>
-      </div>
-
-      <div class="drawerActions">
-        <button class="btn btnPrimary" id="btnCopyEmail" type="button">Copy Email</button>
-        <button class="btn btnPrimary" id="btnCopyPhone" type="button">Copy Phone</button>
-        <button class="btn btnDanger" id="btnDelete" type="button">Delete</button>
-        <button class="btn" id="btnEdit" type="button">Edit</button>
-      </div>
-    </div>
-
-    <!-- Edit view -->
-    <div id="editBox" style="display:none;">
-      <div class="formGrid">
-        <div class="field">
-          <label>First name</label>
-          <input id="f_first" type="text" />
-        </div>
-        <div class="field">
-          <label>Last name</label>
-          <input id="f_last" type="text" />
-        </div>
-        <div class="field full">
-          <label>Email</label>
-          <input id="f_email" type="email" />
-        </div>
-        <div class="field">
-          <label>Mobile</label>
-          <input id="f_mobile" type="text" />
-        </div>
-        <div class="field">
-          <label>Home</label>
-          <input id="f_home" type="text" />
-        </div>
-        <div class="field full">
-          <label>Work</label>
-          <input id="f_work" type="text" />
-        </div>
-        <div class="field full">
-          <label>Company</label>
-          <input id="f_company" type="text" />
-        </div>
-        <div class="field full">
-          <label>Address (single line)</label>
-          <input id="f_address" type="text" />
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="drawerActions">
-        <button class="btn btnPrimary" id="btnSave" type="button">Save</button>
-        <button class="btn" id="btnCancelEdit" type="button">Cancel</button>
-      </div>
-    </div>
-  </div>
-</aside>
 
 <script src="./customer-data.js"></script>
 
 <script>
   let ALL = [];
-  let SELECTED = null;
 
   function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
-
-  function getFirst(c){ return c?.firstName ?? c?.first_name ?? ""; }
-  function getLast(c){ return c?.lastName ?? c?.last_name ?? ""; }
+  function getFirst(c){ return c?.firstName ?? ""; }
+  function getLast(c){ return c?.lastName ?? ""; }
   function getEmail(c){ return c?.email ?? ""; }
-  function getMobile(c){ return c?.mobilePhone ?? c?.mobile_phone ?? ""; }
-  function getHome(c){ return c?.homePhone ?? c?.home_phone ?? ""; }
-  function getWork(c){ return c?.workPhone ?? c?.work_phone ?? ""; }
-  function getCompany(c){ return c?.company ?? ""; }
+  function getPhone(c){ return c?.mobilePhone ?? c?.homePhone ?? c?.workPhone ?? ""; }
   function getAddress(c){ return c?.address ?? ""; }
-
-  function customerSearchBlob(c){
-    return [
-      getFirst(c), getLast(c), getEmail(c),
-      getMobile(c), getHome(c), getWork(c),
-      getAddress(c),
-      c.city, c.state, c.zip,
-      getCompany(c),
-      c.notes
-    ].map(norm).join(" ");
-  }
-
-  function escapeHtml(str){
-    return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-  }
-
-  function setMsg(text){
-    const el = document.getElementById("msg");
-    el.style.display = text ? "block" : "none";
-    el.textContent = text || "";
-  }
-
-  function setDrawerMsg(text){
-    const el = document.getElementById("drawerMsg");
-    el.style.display = text ? "block" : "none";
-    el.textContent = text || "";
-    if (text) setTimeout(() => { el.style.display = "none"; }, 1800);
-  }
 
   function render(list){
     const grid = document.getElementById("grid");
     document.getElementById("shown").textContent = list.length;
 
-    if (!list.length){
-      grid.innerHTML = `<div class="card" style="cursor:default;"><p class="line"><strong>No customers found.</strong></p><p class="line">Try a different search.</p></div>`;
-      return;
-    }
+    grid.innerHTML = list.map(c => `
+      <div class="card" data-id="${c.id}">
+        <p class="name">${getFirst(c)} ${getLast(c)}</p>
+        <p class="line">${getEmail(c)}</p>
+        <p class="line">${getPhone(c)}</p>
+        <p class="line">${getAddress(c)}</p>
+      </div>
+    `).join("");
 
-    grid.innerHTML = list.map(c => {
-      const name = `${getFirst(c)} ${getLast(c)}`.trim() || "(No name)";
-      const phone = getMobile(c) || getHome(c) || getWork(c) || "";
-      const addr = getAddress(c) || "";
-      const email = getEmail(c) || "";
-
-      return `
-        <div class="card" data-id="${escapeHtml(c.id || "")}">
-          <p class="name">${escapeHtml(name)}</p>
-          <p class="line"><strong>Email:</strong> ${escapeHtml(email)}</p>
-          <p class="line"><strong>Phone:</strong> ${escapeHtml(phone)}</p>
-          <p class="line"><strong>Address:</strong> ${escapeHtml(addr)}</p>
-        </div>
-      `;
-    }).join("");
-
+    // ✅ THIS IS THE ONLY BEHAVIOR CHANGE
     grid.onclick = (e) => {
       const card = e.target.closest(".card");
       if (!card) return;
-      const id = card.getAttribute("data-id");
-      const c = ALL.find(x => String(x.id) === String(id));
-      if (c) openDrawer(c);
+      const id = card.dataset.id;
+      window.location.href = `customer.html?id=${encodeURIComponent(id)}`;
     };
-  }
-
-  function fillDrawer(c){
-    const name = `${getFirst(c)} ${getLast(c)}`.trim() || "(No name)";
-    document.getElementById("d_name").textContent = name;
-    document.getElementById("d_email").textContent = getEmail(c) || "";
-    document.getElementById("d_mobile").textContent = getMobile(c) || "";
-    document.getElementById("d_home").textContent = getHome(c) || "";
-    document.getElementById("d_work").textContent = getWork(c) || "";
-    document.getElementById("d_company").textContent = getCompany(c) || "";
-    document.getElementById("d_address").textContent = getAddress(c) || "";
-    document.getElementById("d_id").textContent = c.id || "";
-  }
-
-  function openDrawer(c){
-    SELECTED = c;
-    fillDrawer(c);
-    showViewMode();
-
-    const overlay = document.getElementById("drawerOverlay");
-    const drawer = document.getElementById("drawer");
-    overlay.style.display = "block";
-    drawer.classList.add("open");
-    drawer.setAttribute("aria-hidden","false");
-  }
-
-  function closeDrawer(){
-    const overlay = document.getElementById("drawerOverlay");
-    const drawer = document.getElementById("drawer");
-    overlay.style.display = "none";
-    drawer.classList.remove("open");
-    drawer.setAttribute("aria-hidden","true");
-    SELECTED = null;
-  }
-
-  function showViewMode(){
-    document.getElementById("viewBox").style.display = "block";
-    document.getElementById("editBox").style.display = "none";
-  }
-
-  function showEditMode(){
-    if (!SELECTED) return;
-
-    document.getElementById("f_first").value = getFirst(SELECTED) || "";
-    document.getElementById("f_last").value  = getLast(SELECTED) || "";
-    document.getElementById("f_email").value = getEmail(SELECTED) || "";
-    document.getElementById("f_mobile").value = getMobile(SELECTED) || "";
-    document.getElementById("f_home").value = getHome(SELECTED) || "";
-    document.getElementById("f_work").value = getWork(SELECTED) || "";
-    document.getElementById("f_company").value = getCompany(SELECTED) || "";
-    document.getElementById("f_address").value = getAddress(SELECTED) || "";
-
-    document.getElementById("viewBox").style.display = "none";
-    document.getElementById("editBox").style.display = "block";
-  }
-
-  function updateLocalCustomer(id, newObj){
-    const idx = ALL.findIndex(x => String(x.id) === String(id));
-    if (idx >= 0) ALL[idx] = newObj;
-  }
-
-  function removeLocalCustomer(id){
-    ALL = ALL.filter(x => String(x.id) !== String(id));
   }
 
   async function loadCustomers(){
     try{
-      setMsg("");
       ALL = await initializeCustomerData();
       document.getElementById("count").textContent = ALL.length;
       render(ALL);
-    } catch (e){
-      console.error(e);
-      setMsg("Could not load customers from Supabase. Are you logged in on this dashboard and allowed by RLS?");
+    } catch {
+      document.getElementById("msg").style.display = "block";
+      document.getElementById("msg").textContent = "Failed to load customers.";
     }
   }
 
-  // Search
-  document.getElementById("q").addEventListener("input", (e) => {
+  document.getElementById("q").addEventListener("input", e => {
     const q = norm(e.target.value);
-    const filtered = !q ? ALL : ALL.filter(c => customerSearchBlob(c).includes(q));
-    render(filtered);
-  });
-
-  // Drawer controls
-  document.getElementById("btnCloseDrawer").addEventListener("click", closeDrawer);
-  document.getElementById("drawerOverlay").addEventListener("click", closeDrawer);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
-
-  // Copy buttons
-  document.getElementById("btnCopyEmail").addEventListener("click", async () => {
-    const val = document.getElementById("d_email").textContent.trim();
-    if (!val) return;
-    try{ await navigator.clipboard.writeText(val); setDrawerMsg("Email copied"); } catch {}
-  });
-
-  document.getElementById("btnCopyPhone").addEventListener("click", async () => {
-    if (!SELECTED) return;
-    const val = (getMobile(SELECTED) || getHome(SELECTED) || getWork(SELECTED) || "").trim();
-    if (!val) return;
-    try{ await navigator.clipboard.writeText(val); setDrawerMsg("Phone copied"); } catch {}
-  });
-
-  // Edit
-  document.getElementById("btnEdit").addEventListener("click", () => {
-    showEditMode();
-  });
-
-  document.getElementById("btnCancelEdit").addEventListener("click", () => {
-    showViewMode();
-  });
-
-  document.getElementById("btnSave").addEventListener("click", async () => {
-    if (!SELECTED) return;
-
-    const payload = {
-      firstName: document.getElementById("f_first").value.trim(),
-      lastName: document.getElementById("f_last").value.trim(),
-      email: document.getElementById("f_email").value.trim(),
-      mobilePhone: document.getElementById("f_mobile").value.trim(),
-      homePhone: document.getElementById("f_home").value.trim(),
-      workPhone: document.getElementById("f_work").value.trim(),
-      company: document.getElementById("f_company").value.trim(),
-      address: document.getElementById("f_address").value.trim(),
-    };
-
-    try{
-      const updated = await updateCustomerInSupabase(SELECTED.id, payload);
-      if (!updated) throw new Error("Update did not return a customer.");
-
-      updateLocalCustomer(SELECTED.id, updated);
-      SELECTED = updated;
-      fillDrawer(updated);
-
-      // refresh list UI
-      const q = norm(document.getElementById("q").value);
-      const filtered = !q ? ALL : ALL.filter(c => customerSearchBlob(c).includes(q));
-      render(filtered);
-
-      setDrawerMsg("Saved");
-      showViewMode();
-    } catch (e){
-      console.error(e);
-      alert("Save failed. This usually means RLS is blocking UPDATE for your user.\n\n" + (e?.message || e));
-    }
-  });
-
-  // Delete
-  document.getElementById("btnDelete").addEventListener("click", async () => {
-    if (!SELECTED) return;
-
-    const name = (`${getFirst(SELECTED)} ${getLast(SELECTED)}`).trim() || "(No name)";
-    const ok = confirm(`Delete customer: ${name}?\n\nThis cannot be undone.`);
-    if (!ok) return;
-
-    try{
-      await deleteCustomerInSupabase(SELECTED.id);
-
-      removeLocalCustomer(SELECTED.id);
-
-      const q = norm(document.getElementById("q").value);
-      const filtered = !q ? ALL : ALL.filter(c => customerSearchBlob(c).includes(q));
-      document.getElementById("count").textContent = ALL.length;
-      render(filtered);
-
-      closeDrawer();
-    } catch (e){
-      console.error(e);
-      alert("Delete failed. This usually means RLS is blocking DELETE for your user.\n\n" + (e?.message || e));
-    }
+    render(!q ? ALL : ALL.filter(c =>
+      `${getFirst(c)} ${getLast(c)} ${getEmail(c)} ${getPhone(c)}`.toLowerCase().includes(q)
+    ));
   });
 
   loadCustomers();
 </script>
+
 </body>
 </html>
