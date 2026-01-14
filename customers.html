@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>A-1APSVC • Customers</title>
+  <title>A-1APSVC • Customer</title>
 
   <style>
     :root { --bg:#0b1220; --card:#111b2e; --muted:#93a4c7; --text:#e7eefc; --accent:#4da3ff; --danger:#ff5a6a; }
@@ -24,13 +24,9 @@
       z-index:10;
     }
 
-    .wrap{ max-width:1100px; margin:0 auto; padding:16px;}
+    .wrap{ max-width:980px; margin:0 auto; padding:16px;}
     .top{ display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
-    .brand{ display:flex; flex-direction:column; gap:2px;}
-    .brand h1{ font-size:18px; margin:0; font-weight:750;}
-    .brand p{ margin:0; font-size:12px; color:var(--muted);}
 
-    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
     .btn{
       background:transparent;
       border:1px solid rgba(255,255,255,.14);
@@ -41,141 +37,203 @@
       text-decoration:none;
       font-size:14px;
     }
-
-    .search{ flex:1; min-width:260px; }
-    input{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
+    .btnPrimary{
+      background:rgba(77,163,255,.16);
+      border-color:rgba(77,163,255,.40);
     }
-
-    .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
-    .pill{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      padding:8px 10px;
-      border-radius:999px;
-      font-size:13px;
-      color:var(--muted);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-      gap:12px;
-      margin:16px 0 40px;
+    .btnDanger{
+      background:rgba(255,90,106,.12);
+      border-color:rgba(255,90,106,.35);
     }
 
     .card{
       background:rgba(17,27,46,.9);
       border:1px solid rgba(255,255,255,.10);
       border-radius:16px;
-      padding:14px;
-      cursor:pointer;
+      padding:16px;
+      margin-top:16px;
     }
 
-    .name{ font-weight:750; margin:0 0 6px; font-size:16px;}
-    .line{ margin:0; font-size:13px; color:var(--muted); }
+    .name{ font-size:22px; font-weight:900; margin:0; }
+    .muted{ color:var(--muted); font-size:13px; }
+
+    .kv{
+      display:grid;
+      grid-template-columns:120px 1fr;
+      gap:10px 12px;
+      margin-top:14px;
+    }
+
+    .actions{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+
+    .field label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:4px;
+    }
+    .field input{
+      width:100%;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+    }
+
+    .formGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:14px;
+    }
+    .full{ grid-column:1/-1; }
 
     .error{
-      background:rgba(255,90,106,.10);
-      border:1px solid rgba(255,90,106,.35);
-      color:#ffd3d8;
+      background:rgba(255,90,106,.15);
+      border:1px solid rgba(255,90,106,.4);
       padding:12px;
-      border-radius:14px;
+      border-radius:12px;
+      margin-top:14px;
     }
-
-    footer{ color:rgba(231,238,252,.55); font-size:12px; padding:12px 0 30px; }
   </style>
 </head>
 
 <body>
 
 <header>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <h1>Customer Management</h1>
-        <p>Supabase live data</p>
-      </div>
-      <div class="actions" style="flex:1; justify-content:flex-end;">
-        <div class="search">
-          <input id="q" type="search" placeholder="Search name, phone, email..." />
-        </div>
-        <a class="btn" href="./index.html">Back to Dashboard</a>
-      </div>
-    </div>
-
-    <div class="stats">
-      <div class="pill"><span id="count">0</span> customers loaded</div>
-      <div class="pill"><span id="shown">0</span> shown</div>
+  <div class="wrap top">
+    <h1>Customer Profile</h1>
+    <div class="actions">
+      <a class="btn" href="./customers.html">← Back to Customers</a>
+      <a class="btn" href="./index.html">Dashboard</a>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <div id="msg" class="error" style="display:none;"></div>
-  <div id="grid" class="grid"></div>
-  <footer>If customers don’t load, check login or RLS.</footer>
+  <div id="error" class="error" style="display:none;"></div>
+
+  <section id="view" class="card" style="display:none;">
+    <h2 class="name" id="v_name"></h2>
+    <p class="muted" id="v_meta"></p>
+
+    <div class="kv">
+      <div>Email</div><div id="v_email"></div>
+      <div>Mobile</div><div id="v_mobile"></div>
+      <div>Home</div><div id="v_home"></div>
+      <div>Work</div><div id="v_work"></div>
+      <div>Company</div><div id="v_company"></div>
+      <div>Address</div><div id="v_address"></div>
+      <div>ID</div><div id="v_id"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btnPrimary" id="btnEdit">Edit</button>
+      <button class="btn btnDanger" id="btnDelete">Delete</button>
+    </div>
+  </section>
+
+  <section id="edit" class="card" style="display:none;">
+    <h2>Edit Customer</h2>
+
+    <div class="formGrid">
+      <div class="field"><label>First</label><input id="f_first"></div>
+      <div class="field"><label>Last</label><input id="f_last"></div>
+      <div class="field full"><label>Email</label><input id="f_email"></div>
+      <div class="field"><label>Mobile</label><input id="f_mobile"></div>
+      <div class="field"><label>Home</label><input id="f_home"></div>
+      <div class="field full"><label>Work</label><input id="f_work"></div>
+      <div class="field full"><label>Company</label><input id="f_company"></div>
+      <div class="field full"><label>Address</label><input id="f_address"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btnPrimary" id="btnSave">Save</button>
+      <button class="btn" id="btnCancel">Cancel</button>
+    </div>
+  </section>
 </main>
 
 <script src="./customer-data.js"></script>
-
 <script>
-  let ALL = [];
+  let CUSTOMER = null;
 
-  function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
-  function getFirst(c){ return c?.firstName ?? ""; }
-  function getLast(c){ return c?.lastName ?? ""; }
-  function getEmail(c){ return c?.email ?? ""; }
-  function getPhone(c){ return c?.mobilePhone ?? c?.homePhone ?? c?.workPhone ?? ""; }
-  function getAddress(c){ return c?.address ?? ""; }
+  const qs = new URLSearchParams(location.search);
+  const id = qs.get("id");
 
-  function render(list){
-    const grid = document.getElementById("grid");
-    document.getElementById("shown").textContent = list.length;
-
-    grid.innerHTML = list.map(c => `
-      <div class="card" data-id="${c.id}">
-        <p class="name">${getFirst(c)} ${getLast(c)}</p>
-        <p class="line">${getEmail(c)}</p>
-        <p class="line">${getPhone(c)}</p>
-        <p class="line">${getAddress(c)}</p>
-      </div>
-    `).join("");
-
-    // ✅ THIS IS THE ONLY BEHAVIOR CHANGE
-    grid.onclick = (e) => {
-      const card = e.target.closest(".card");
-      if (!card) return;
-      const id = card.dataset.id;
-      window.location.href = `customer.html?id=${encodeURIComponent(id)}`;
-    };
+  function err(msg){
+    const e = document.getElementById("error");
+    e.textContent = msg;
+    e.style.display = "block";
   }
 
-  async function loadCustomers(){
-    try{
-      ALL = await initializeCustomerData();
-      document.getElementById("count").textContent = ALL.length;
-      render(ALL);
-    } catch {
-      document.getElementById("msg").style.display = "block";
-      document.getElementById("msg").textContent = "Failed to load customers.";
-    }
+  function show(view){
+    document.getElementById("view").style.display = view==="view"?"block":"none";
+    document.getElementById("edit").style.display = view==="edit"?"block":"none";
   }
 
-  document.getElementById("q").addEventListener("input", e => {
-    const q = norm(e.target.value);
-    render(!q ? ALL : ALL.filter(c =>
-      `${getFirst(c)} ${getLast(c)} ${getEmail(c)} ${getPhone(c)}`.toLowerCase().includes(q)
-    ));
-  });
+  function fillView(c){
+    document.getElementById("v_name").textContent = `${c.firstName||""} ${c.lastName||""}`;
+    document.getElementById("v_email").textContent = c.email||"";
+    document.getElementById("v_mobile").textContent = c.mobilePhone||"";
+    document.getElementById("v_home").textContent = c.homePhone||"";
+    document.getElementById("v_work").textContent = c.workPhone||"";
+    document.getElementById("v_company").textContent = c.company||"";
+    document.getElementById("v_address").textContent = c.address||"";
+    document.getElementById("v_id").textContent = c.id;
+    document.getElementById("v_meta").textContent = `Updated ${c.updated_at||"—"}`;
+  }
 
-  loadCustomers();
+  function fillForm(c){
+    f_first.value=c.firstName||"";
+    f_last.value=c.lastName||"";
+    f_email.value=c.email||"";
+    f_mobile.value=c.mobilePhone||"";
+    f_home.value=c.homePhone||"";
+    f_work.value=c.workPhone||"";
+    f_company.value=c.company||"";
+    f_address.value=c.address||"";
+  }
+
+  async function load(){
+    if(!id) return err("Missing customer id");
+
+    const all = await initializeCustomerData();
+    CUSTOMER = all.find(x=>String(x.id)===String(id));
+    if(!CUSTOMER) return err("Customer not found");
+
+    fillView(CUSTOMER);
+    show("view");
+  }
+
+  btnEdit.onclick = ()=>{ fillForm(CUSTOMER); show("edit"); };
+  btnCancel.onclick = ()=> show("view");
+
+  btnSave.onclick = async ()=>{
+    const updated = await updateCustomerInSupabase(CUSTOMER.id,{
+      firstName:f_first.value.trim(),
+      lastName:f_last.value.trim(),
+      email:f_email.value.trim(),
+      mobilePhone:f_mobile.value.trim(),
+      homePhone:f_home.value.trim(),
+      workPhone:f_work.value.trim(),
+      company:f_company.value.trim(),
+      address:f_address.value.trim()
+    });
+    CUSTOMER = updated;
+    fillView(updated);
+    show("view");
+  };
+
+  btnDelete.onclick = async ()=>{
+    if(!confirm("Delete this customer?")) return;
+    await deleteCustomerInSupabase(CUSTOMER.id);
+    location.href="customers.html";
+  };
+
+  load();
 </script>
-
 </body>
 </html>
+
