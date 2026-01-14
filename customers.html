@@ -64,7 +64,7 @@
   </footer>
 </main>
 
-<!-- ✅ NEW: Supabase customers data layer -->
+<!-- ✅ Supabase customers data layer (must exist at repo root as customer-data.js) -->
 <script src="./customer-data.js"></script>
 
 <script>
@@ -122,7 +122,7 @@
   async function loadCustomers(){
     try{
       setMsg("");
-      // ✅ This function is in customer-data.js (your Supabase version)
+      // initializeCustomerData() must be defined in customer-data.js
       ALL = await initializeCustomerData();
       document.getElementById("count").textContent = ALL.length;
       render(ALL);
