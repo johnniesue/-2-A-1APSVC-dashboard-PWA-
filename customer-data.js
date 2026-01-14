@@ -189,29 +189,18 @@ async function createCustomerInSupabase(c) {
 
 async function updateCustomerInSupabase(id, c) {
   const payload = {
-    first_name: c.firstName ?? c.first_name ?? "",
-    last_name: c.lastName ?? c.last_name ?? "",
-    email: c.email ?? null,
-    mobile_phone: c.mobilePhone ?? c.mobile_phone ?? null,
-    home_phone: c.homePhone ?? c.home_phone ?? null,
-    work_phone: c.workPhone ?? c.work_phone ?? null,
-    company: c.company ?? null,
-
-    street1: (c.address ?? c.street1 ?? "").trim() || null,
-    street2: (c.street2 ?? "").trim() || null,
-    city: (c.city ?? "").trim() || null,
-    state: (c.state ?? "").trim() || null,
-    zip: (c.zip ?? "").trim() || null,
-
-    tags: c.tags ?? null,
-    notes: c.notes ?? null,
-
-    updated_at: new Date().toISOString(),
+    first_name: c.firstName || "",
+    last_name: c.lastName || "",
+    email: c.email || null,
+    mobile_phone: c.mobilePhone || null,
+    home_phone: c.homePhone || null,
+    work_phone: c.workPhone || null,
+    company: c.company || null,
+    street1: (c.address || "").trim() || null
+    // ✅ removed updated_at (only include it if you KNOW the column exists)
   };
 
-  const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(
-    id
-  )}`;
+  const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(id)}`;
   const rows = await supabaseFetchJson(url, "PATCH", payload);
   return rows?.[0] ? mapRowToUI(rows[0]) : null;
 }
