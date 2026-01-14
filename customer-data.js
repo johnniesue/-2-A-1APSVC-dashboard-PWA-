@@ -7,6 +7,10 @@
  * - Uses publishable (anon) key ONLY.
  * - Uses the logged-in Supabase access token stored in localStorage
  *   under sb-<projectref>-auth-token (set when you login on dashboard).
+ *
+ * FIX INCLUDED:
+ * - customers.html expects snake_case fields: first_name, last_name, mobile_phone, etc.
+ * - This file now returns those exact keys (so names show up again).
  */
 
 const SUPABASE_URL = "https://zzigzylypifjokskehkn.supabase.co";
@@ -49,40 +53,61 @@ function buildAddress(r) {
   return parts.join(", ");
 }
 
+/**
+ * ✅ IMPORTANT:
+ * customers.html is using:
+ *  c.first_name, c.last_name, c.mobile_phone, etc.
+ * So we must return that exact shape (snake_case).
+ */
 function mapRowToUI(r) {
   return {
     id: r.id, // UUID string
-    firstName: r.first_name || "",
-    lastName: r.last_name || "",
-    email: r.email || "",
-    mobilePhone: r.mobile_phone || "",
-    homePhone: r.home_phone || "",
-    workPhone: r.work_phone || "",
+
+    // ✅ Names (snake_case)
+    first_name: r.first_name ?? "",
+    last_name: r.last_name ?? "",
+
+    company: r.company ?? "",
+
+    email: r.email ?? "",
+    mobile_phone: r.mobile_phone ?? "",
+    home_phone: r.home_phone ?? "",
+    work_phone: r.work_phone ?? "",
+
+    // customers.html uses c.address / c.city / c.state / c.zip
     address: buildAddress(r),
-    company: r.company || "",
-    tags: [],
-    notes: "",
-    dateAdded: r.created_at || new Date().toISOString(),
+    city: r.city ?? "",
+    state: r.state ?? "",
+    zip: r.zip ?? "",
+
+    // Optional extras (safe defaults)
+    tags: r.tags ?? [],
+    notes: r.notes ?? "",
+
+    created_at: r.created_at ?? new Date().toISOString(),
+    updated_at: r.updated_at ?? null,
   };
 }
 
 async function supabaseFetchJson(url, method = "GET", body = null) {
   const accessToken = getSupabaseAccessToken();
   if (!accessToken) {
-    throw new Error("Not logged in. Please login on the Dashboard first, then open Customers again.");
+    throw new Error(
+      "Not logged in. Please login on the Dashboard first, then open Customers again."
+    );
   }
 
   const headers = {
     apikey: SUPABASE_ANON_KEY,
     Authorization: `Bearer ${accessToken}`,
     "Content-Type": "application/json",
-    Prefer: "return=representation"
+    Prefer: "return=representation",
   };
 
   const resp = await fetch(url, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : null
+    body: body ? JSON.stringify(body) : null,
   });
 
   if (!resp.ok) {
@@ -99,7 +124,7 @@ async function supabaseFetchJson(url, method = "GET", body = null) {
  * Load customers from Supabase, with a 6-hour local cache fallback.
  */
 async function initializeCustomerData() {
-  // If you have older key saved, migrate it
+  // Migrate any older legacy key if it exists
   const legacy = localStorage.getItem("a1apsvc_customers");
   if (legacy && !localStorage.getItem(CACHE_KEY)) {
     localStorage.setItem(CACHE_KEY, legacy);
@@ -119,7 +144,7 @@ async function initializeCustomerData() {
 
   const url =
     `${SUPABASE_URL}/rest/v1/customers` +
-    `?select=id,first_name,last_name,company,email,mobile_phone,home_phone,work_phone,street1,street2,city,state,zip,created_at` +
+    `?select=id,first_name,last_name,company,email,mobile_phone,home_phone,work_phone,street1,street2,city,state,zip,created_at,updated_at,tags,notes` +
     `&order=created_at.desc` +
     `&limit=5000`;
 
@@ -133,18 +158,28 @@ async function initializeCustomerData() {
 
 /**
  * CRUD helpers (so Add/Edit/Delete can write to Supabase)
+ * NOTE: Keep accepting camelCase input (from forms),
+ * but always return snake_case objects to the UI.
  */
 async function createCustomerInSupabase(c) {
   const payload = {
-    first_name: c.firstName || "",
-    last_name: c.lastName || "",
-    email: c.email || null,
-    mobile_phone: c.mobilePhone || null,
-    home_phone: c.homePhone || null,
-    work_phone: c.workPhone || null,
-    company: c.company || null,
-    street1: (c.address || "").trim() || null, // simple: store whatever they typed into street1
-    // You can improve later: split address into street/city/state/zip
+    first_name: c.firstName ?? c.first_name ?? "",
+    last_name: c.lastName ?? c.last_name ?? "",
+    email: c.email ?? null,
+    mobile_phone: c.mobilePhone ?? c.mobile_phone ?? null,
+    home_phone: c.homePhone ?? c.home_phone ?? null,
+    work_phone: c.workPhone ?? c.work_phone ?? null,
+    company: c.company ?? null,
+
+    // simple: store whatever they typed into street1
+    street1: (c.address ?? c.street1 ?? "").trim() || null,
+    street2: (c.street2 ?? "").trim() || null,
+    city: (c.city ?? "").trim() || null,
+    state: (c.state ?? "").trim() || null,
+    zip: (c.zip ?? "").trim() || null,
+
+    tags: c.tags ?? null,
+    notes: c.notes ?? null,
   };
 
   const url = `${SUPABASE_URL}/rest/v1/customers`;
@@ -154,24 +189,37 @@ async function createCustomerInSupabase(c) {
 
 async function updateCustomerInSupabase(id, c) {
   const payload = {
-    first_name: c.firstName || "",
-    last_name: c.lastName || "",
-    email: c.email || null,
-    mobile_phone: c.mobilePhone || null,
-    home_phone: c.homePhone || null,
-    work_phone: c.workPhone || null,
-    company: c.company || null,
-    street1: (c.address || "").trim() || null,
-    updated_at: new Date().toISOString()
+    first_name: c.firstName ?? c.first_name ?? "",
+    last_name: c.lastName ?? c.last_name ?? "",
+    email: c.email ?? null,
+    mobile_phone: c.mobilePhone ?? c.mobile_phone ?? null,
+    home_phone: c.homePhone ?? c.home_phone ?? null,
+    work_phone: c.workPhone ?? c.work_phone ?? null,
+    company: c.company ?? null,
+
+    street1: (c.address ?? c.street1 ?? "").trim() || null,
+    street2: (c.street2 ?? "").trim() || null,
+    city: (c.city ?? "").trim() || null,
+    state: (c.state ?? "").trim() || null,
+    zip: (c.zip ?? "").trim() || null,
+
+    tags: c.tags ?? null,
+    notes: c.notes ?? null,
+
+    updated_at: new Date().toISOString(),
   };
 
-  const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(id)}`;
+  const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(
+    id
+  )}`;
   const rows = await supabaseFetchJson(url, "PATCH", payload);
   return rows?.[0] ? mapRowToUI(rows[0]) : null;
 }
 
 async function deleteCustomerInSupabase(id) {
-  const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(id)}`;
+  const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(
+    id
+  )}`;
   await supabaseFetchJson(url, "DELETE");
   return true;
 }
