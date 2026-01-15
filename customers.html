@@ -6,14 +6,7 @@
   <title>A-1APSVC • Customers</title>
 
   <style>
-    :root {
-      --bg:#0b1220;
-      --card:#111b2e;
-      --muted:#93a4c7;
-      --text:#e7eefc;
-      --accent:#4da3ff;
-      --danger:#ff5a6a;
-    }
+    :root { --bg:#0b1220; --card:#111b2e; --muted:#93a4c7; --text:#e7eefc; --accent:#4da3ff; --danger:#ff5a6a; }
 
     body{
       margin:0;
@@ -23,8 +16,7 @@
     }
 
     header{
-      position:sticky;
-      top:0;
+      position:sticky; top:0;
       background:rgba(11,18,32,.9);
       backdrop-filter: blur(10px);
       border-bottom:1px solid rgba(255,255,255,.08);
@@ -38,7 +30,6 @@
     .brand p{ margin:4px 0 0; font-size:12px; color:var(--muted);}
 
     .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
-
     .btn{
       background:transparent;
       border:1px solid rgba(255,255,255,.14);
@@ -48,12 +39,21 @@
       cursor:pointer;
       font-size:14px;
       text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
     }
     .btn:hover{ border-color:rgba(255,255,255,.28); }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; }
 
     .btnPrimary{
       background:rgba(77,163,255,.16);
       border-color:rgba(77,163,255,.40);
+    }
+    .btnDanger{
+      background:rgba(255,90,106,.15);
+      border-color:rgba(255,90,106,.40);
     }
 
     .pill{
@@ -63,7 +63,9 @@
       border-radius:999px;
       font-size:13px;
       color:var(--muted);
-      white-space:nowrap;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
     }
 
     .search{ flex:1; min-width:260px; }
@@ -75,7 +77,9 @@
       background:rgba(255,255,255,.06);
       color:var(--text);
       outline:none;
+      box-sizing:border-box;
     }
+    input::placeholder{ color:rgba(231,238,252,.55); }
 
     .grid{
       display:grid;
@@ -91,16 +95,16 @@
       padding:14px;
       box-shadow:0 10px 30px rgba(0,0,0,.25);
       cursor:pointer;
-      transition:transform .08s ease, border-color .08s ease;
+      transition: transform .08s ease, border-color .08s ease;
     }
-
     .card:hover{
-      transform:translateY(-1px);
-      border-color:rgba(77,163,255,.35);
+      transform: translateY(-1px);
+      border-color: rgba(77,163,255,.35);
     }
 
     .name{ font-weight:800; margin:0 0 6px; font-size:16px;}
     .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35; }
+    .line strong{ color:var(--text); font-weight:650; }
 
     .error{
       background:rgba(255,90,106,.12);
@@ -110,6 +114,72 @@
       margin-top:12px;
       display:none;
       white-space:pre-wrap;
+    }
+
+    /* ---------- Modal (Add Customer) ---------- */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      display:none;
+      z-index:100;
+    }
+    .modal{
+      position:fixed;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      width:min(720px, 94vw);
+      background:rgba(11,18,32,.98);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      box-shadow:0 20px 70px rgba(0,0,0,.55);
+      display:none;
+      z-index:110;
+    }
+    .modalHeader{
+      padding:14px 16px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .modalHeader h2{ margin:0; font-size:16px; font-weight:850; }
+    .modalHeader p{ margin:4px 0 0; font-size:12px; color:var(--muted); }
+
+    .modalBody{ padding:16px; }
+    .formGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .full{ grid-column:1 / -1; }
+
+    label{ font-size:12px; color:var(--muted); display:block; margin:0 0 6px; }
+    .field input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      outline:none;
+      box-sizing:border-box;
+    }
+
+    .modalActions{
+      padding:14px 16px;
+      border-top:1px solid rgba(255,255,255,.10);
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+
+    @media (max-width:640px){
+      .formGrid{ grid-template-columns:1fr; }
+      .full{ grid-column:auto; }
     }
   </style>
 </head>
@@ -129,8 +199,10 @@
           <input id="q" type="search" placeholder="Search customers…" />
         </div>
 
-        <button class="btn btnPrimary" id="btnLogin" type="button">Login</button>
-        <button class="btn" id="btnLogout" type="button" style="display:none;">Logout</button>
+        <button class="btn btnPrimary" id="btnAdd" title="Add a new customer">+ Add</button>
+
+        <button class="btn btnPrimary" id="btnLogin">Login</button>
+        <button class="btn" id="btnLogout" style="display:none;">Logout</button>
         <div class="pill" id="authPill" style="display:none;"></div>
 
         <a class="btn" href="./index.html">Dashboard</a>
@@ -148,88 +220,173 @@
   <div id="grid" class="grid"></div>
 </main>
 
-<!-- MUST be module because customer-data.js uses import -->
+<!-- Add Customer Modal -->
+<div id="overlay" class="overlay"></div>
+
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modalHeader">
+    <div>
+      <h2 id="modalTitle">Add Customer</h2>
+      <p>Create a new customer in Supabase.</p>
+    </div>
+    <button class="btn" id="btnCloseModal" type="button">Close</button>
+  </div>
+
+  <div class="modalBody">
+    <div class="formGrid">
+      <div class="field">
+        <label>First name</label>
+        <input id="a_first" type="text" autocomplete="given-name" />
+      </div>
+      <div class="field">
+        <label>Last name</label>
+        <input id="a_last" type="text" autocomplete="family-name" />
+      </div>
+
+      <div class="field full">
+        <label>Email</label>
+        <input id="a_email" type="email" autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label>Mobile phone</label>
+        <input id="a_mobile" type="text" autocomplete="tel" />
+      </div>
+      <div class="field">
+        <label>Home phone</label>
+        <input id="a_home" type="text" />
+      </div>
+
+      <div class="field">
+        <label>Work phone</label>
+        <input id="a_work" type="text" />
+      </div>
+      <div class="field">
+        <label>Company</label>
+        <input id="a_company" type="text" autocomplete="organization" />
+      </div>
+
+      <div class="field full">
+        <label>Address (single line)</label>
+        <input id="a_address" type="text" placeholder="Street, City, State ZIP" autocomplete="street-address" />
+      </div>
+    </div>
+
+    <div id="addMsg" class="error" style="display:none; margin-top:12px;"></div>
+  </div>
+
+  <div class="modalActions">
+    <button class="btn" id="btnCancelAdd" type="button">Cancel</button>
+    <button class="btn btnPrimary" id="btnCreate" type="button">Create Customer</button>
+  </div>
+</div>
+
 <script type="module" src="./customer-data.js"></script>
 
 <script>
   let ALL = [];
 
-  function norm(v){
-    return (v ?? "").toString().toLowerCase().trim();
+  const $ = (id) => document.getElementById(id);
+
+  function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
+
+  function getFirst(c){ return c?.first_name ?? c?.firstName ?? ""; }
+  function getLast(c){ return c?.last_name ?? c?.lastName ?? ""; }
+  function getEmail(c){ return c?.email ?? ""; }
+  function getMobile(c){ return c?.mobile_phone ?? c?.mobilePhone ?? ""; }
+  function getAddress(c){ return c?.address ?? ""; }
+
+  function showMsg(text){
+    const el = $("msg");
+    el.style.display = text ? "block" : "none";
+    el.textContent = text || "";
   }
 
   function render(list){
-    const grid = document.getElementById("grid");
-    document.getElementById("count").textContent = list.length;
+    const grid = $("grid");
+    $("count").textContent = list.length;
 
     if (!list.length){
-      grid.innerHTML = `<div class="card"><p class="line">No customers found.</p></div>`;
+      grid.innerHTML = `<div class="card" style="cursor:default;"><p class="line"><strong>No customers found.</strong></p></div>`;
       return;
     }
 
     grid.innerHTML = list.map(c => {
-      const name = `${c.first_name || ""} ${c.last_name || ""}`.trim() || "(No name)";
-      const phone = c.mobile_phone || c.home_phone || c.work_phone || "";
-      const email = c.email || "";
-      const address = c.address || "";  // ✅ THIS IS THE ADDED LINE
+      const name = `${getFirst(c)} ${getLast(c)}`.trim() || "(No name)";
+      const email = getEmail(c);
+      const phone = getMobile(c);
+      const addr = getAddress(c);
 
       return `
-        <div class="card" onclick="location.href='customer.html?id=${c.id}'">
-          <p class="name">${name}</p>
-          <p class="line">${email}</p>
-          <p class="line">${phone}</p>
-          <p class="line">${address}</p>
+        <div class="card" data-id="${String(c.id)}">
+          <p class="name">${escapeHtml(name)}</p>
+          <p class="line"><strong>Email:</strong> ${escapeHtml(email)}</p>
+          <p class="line"><strong>Phone:</strong> ${escapeHtml(phone)}</p>
+          <p class="line"><strong>Address:</strong> ${escapeHtml(addr)}</p>
         </div>
       `;
     }).join("");
+
+    grid.onclick = (e) => {
+      const card = e.target.closest(".card");
+      if (!card) return;
+      const id = card.getAttribute("data-id");
+      location.href = `customer.html?id=${encodeURIComponent(id)}`;
+    };
+  }
+
+  function escapeHtml(str){
+    return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
   }
 
   async function loadCustomers(){
     try{
-      msg.style.display = "none";
-      msg.textContent = "";
-      ALL = await initializeCustomerData();
+      showMsg("");
+      ALL = await window.initializeCustomerData();
       render(ALL);
     } catch (e){
-      msg.textContent = "Not logged in. Click Login to view customers.\n\n" + (e?.message || e);
-      msg.style.display = "block";
+      console.error(e);
+      showMsg("Not logged in. Click Login to view customers.\n\n" + (e?.message || e));
       render([]);
     }
   }
 
-  q.addEventListener("input", e => {
-    const v = norm(e.target.value);
-    render(
-      !v ? ALL : ALL.filter(c =>
-        `${c.first_name} ${c.last_name} ${c.email} ${c.mobile_phone} ${c.home_phone} ${c.work_phone} ${c.address} ${c.city} ${c.state} ${c.zip}`
-          .toLowerCase()
-          .includes(v)
-      )
-    );
+  $("q").addEventListener("input", e => {
+    const q = norm(e.target.value);
+    if (!q) return render(ALL);
+
+    const filtered = ALL.filter(c => {
+      const blob = [
+        getFirst(c), getLast(c), getEmail(c),
+        getMobile(c), (c?.home_phone ?? c?.homePhone ?? ""),
+        (c?.work_phone ?? c?.workPhone ?? ""), getAddress(c),
+        (c?.city ?? ""), (c?.state ?? ""), (c?.zip ?? ""), (c?.company ?? "")
+      ].map(norm).join(" ");
+      return blob.includes(q);
+    });
+
+    render(filtered);
   });
 
-  // ---------- AUTH (use window.supabase because modules are scoped) ----------
+  // ---------- AUTH ----------
   async function refreshAuthUI(){
-    const sb = window.supabase;
-    if (!sb) return;
-
-    const { data } = await sb.auth.getSession();
+    const { data } = await window.supabase.auth.getSession();
     const email = data?.session?.user?.email;
 
-    btnLogin.style.display = email ? "none" : "inline-block";
-    btnLogout.style.display = email ? "inline-block" : "none";
-    authPill.style.display = email ? "inline-flex" : "none";
-    authPill.textContent = email ? `Logged in: ${email}` : "";
+    $("btnLogin").style.display = email ? "none" : "inline-flex";
+    $("btnLogout").style.display = email ? "inline-flex" : "none";
+    $("authPill").style.display = email ? "inline-flex" : "none";
+    $("authPill").textContent = email ? `Logged in: ${email}` : "";
+
+    // Only allow Add when logged in
+    $("btnAdd").disabled = !email;
   }
 
-  btnLogin.onclick = async () => {
-    const sb = window.supabase;
-    if (!sb) return alert("Supabase not loaded yet. Refresh and try again.");
-
+  $("btnLogin").onclick = async () => {
     const email = prompt("Enter your email:");
     if (!email) return;
 
-    await sb.auth.signInWithOtp({
+    await window.supabase.auth.signInWithOtp({
       email,
       options:{ emailRedirectTo: location.href }
     });
@@ -237,29 +394,91 @@
     alert("Check your email for the login link.");
   };
 
-  btnLogout.onclick = async () => {
-    const sb = window.supabase;
-    if (!sb) return;
-
-    await sb.auth.signOut();
+  $("btnLogout").onclick = async () => {
+    await window.supabase.auth.signOut();
     await refreshAuthUI();
     await loadCustomers();
   };
 
-  (function initWhenSupabaseReady(){
-    const sb = window.supabase;
-    if (!sb){
-      setTimeout(initWhenSupabaseReady, 50);
-      return;
-    }
+  window.supabase.auth.onAuthStateChange(async () => {
+    await refreshAuthUI();
+    await loadCustomers();
+  });
 
-    sb.auth.onAuthStateChange(async () => {
-      await refreshAuthUI();
+  // ---------- ADD CUSTOMER MODAL ----------
+  function openModal(){
+    $("addMsg").style.display = "none";
+    $("addMsg").textContent = "";
+
+    // clear fields
+    $("a_first").value = "";
+    $("a_last").value = "";
+    $("a_email").value = "";
+    $("a_mobile").value = "";
+    $("a_home").value = "";
+    $("a_work").value = "";
+    $("a_company").value = "";
+    $("a_address").value = "";
+
+    $("overlay").style.display = "block";
+    $("modal").style.display = "block";
+
+    setTimeout(()=> $("a_first").focus(), 0);
+  }
+
+  function closeModal(){
+    $("overlay").style.display = "none";
+    $("modal").style.display = "none";
+  }
+
+  $("btnAdd").addEventListener("click", () => openModal());
+  $("btnCloseModal").addEventListener("click", closeModal);
+  $("btnCancelAdd").addEventListener("click", closeModal);
+  $("overlay").addEventListener("click", closeModal);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+  $("btnCreate").addEventListener("click", async () => {
+    try{
+      $("btnCreate").disabled = true;
+
+      const payload = {
+        firstName: $("a_first").value.trim(),
+        lastName: $("a_last").value.trim(),
+        email: $("a_email").value.trim(),
+        mobilePhone: $("a_mobile").value.trim(),
+        homePhone: $("a_home").value.trim(),
+        workPhone: $("a_work").value.trim(),
+        company: $("a_company").value.trim(),
+        address: $("a_address").value.trim(),
+      };
+
+      // basic validation: require at least a name
+      if (!payload.firstName && !payload.lastName){
+        throw new Error("Please enter at least a first or last name.");
+      }
+
+      const created = await window.createCustomerInSupabase(payload);
+      if (!created) throw new Error("Create did not return a customer.");
+
+      closeModal();
+
+      // Reload to include new record + refresh cache
       await loadCustomers();
-    });
 
-    refreshAuthUI().then(loadCustomers);
-  })();
+      // Optional: jump to new customer page
+      location.href = `customer.html?id=${encodeURIComponent(created.id)}`;
+
+    } catch (e){
+      console.error(e);
+      $("addMsg").textContent = e?.message || String(e);
+      $("addMsg").style.display = "block";
+    } finally{
+      $("btnCreate").disabled = false;
+    }
+  });
+
+  // boot
+  refreshAuthUI().then(loadCustomers);
 </script>
 
 </body>
