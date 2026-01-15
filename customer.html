@@ -80,7 +80,7 @@
     .grid{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap:14px 16px; /* ✅ fixes “fields on top of each other” */
+      gap:14px 16px;
       margin-top:10px;
     }
     .full{ grid-column: 1 / -1; }
@@ -97,7 +97,6 @@
       color:var(--text);
       outline:none;
     }
-    input::placeholder{ color:rgba(231,238,252,.55); }
 
     .actions{
       display:flex;
@@ -195,33 +194,33 @@
   </div>
 </main>
 
-<!-- IMPORTANT:
-     customer-data.js is a module and exposes functions on window.*
-     So we must load it as type="module" BEFORE our inline script uses them. -->
+<!-- Load your data layer -->
 <script type="module" src="./customer-data.js"></script>
 
 <script>
+  function $(id){ return document.getElementById(id); }
+
   const qs = new URLSearchParams(location.search);
   const id = qs.get("id");
 
-  const msgError = document.getElementById("msgError");
-  const msgOk = document.getElementById("msgOk");
+  const msgError = $("msgError");
+  const msgOk = $("msgOk");
+  const title = $("title");
+  const subtitle = $("subtitle");
 
-  const title = document.getElementById("title");
-  const subtitle = document.getElementById("subtitle");
+  const first_name = $("first_name");
+  const last_name = $("last_name");
+  const email = $("email");
+  const mobile_phone = $("mobile_phone");
+  const home_phone = $("home_phone");
+  const work_phone = $("work_phone");
+  const address = $("address");
 
-  const first_name = document.getElementById("first_name");
-  const last_name = document.getElementById("last_name");
-  const email = document.getElementById("email");
-  const mobile_phone = document.getElementById("mobile_phone");
-  const home_phone = document.getElementById("home_phone");
-  const work_phone = document.getElementById("work_phone");
-  const address = document.getElementById("address");
-
-  const btnSave = document.getElementById("btnSave");
-  const btnDelete = document.getElementById("btnDelete");
+  const btnSave = $("btnSave");
+  const btnDelete = $("btnDelete");
 
   function showErr(msg){
+    msgOk.style.display = "none";
     msgError.textContent = msg;
     msgError.style.display = "block";
   }
@@ -230,6 +229,7 @@
     msgError.textContent = "";
   }
   function showOk(msg){
+    clearErr();
     msgOk.textContent = msg;
     msgOk.style.display = "block";
     setTimeout(()=>{ msgOk.style.display="none"; }, 1800);
@@ -240,26 +240,31 @@
     throw new Error("Missing id");
   }
 
+  async function waitForGlobals(timeoutMs=5000){
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs){
+      if (typeof window.initializeCustomerData === "function" &&
+          typeof window.updateCustomerInSupabase === "function" &&
+          typeof window.deleteCustomerInSupabase === "function") {
+        return true;
+      }
+      await new Promise(r => setTimeout(r, 50));
+    }
+    return false;
+  }
+
   async function loadCustomer(){
     clearErr();
-
-    // Guard: make sure module loaded + exported globals exist
-    if (typeof window.initializeCustomerData !== "function"){
-      showErr("customer-data.js did not load (initializeCustomerData missing).");
-      throw new Error("initializeCustomerData missing");
-    }
-    if (typeof window.updateCustomerInSupabase !== "function"){
-      showErr("customer-data.js did not load (updateCustomerInSupabase missing).");
-      throw new Error("updateCustomerInSupabase missing");
-    }
-    if (typeof window.deleteCustomerInSupabase !== "function"){
-      showErr("customer-data.js did not load (deleteCustomerInSupabase missing).");
-      throw new Error("deleteCustomerInSupabase missing");
-    }
-
     subtitle.textContent = "Loading…";
     btnSave.disabled = true;
     btnDelete.disabled = true;
+
+    const ok = await waitForGlobals();
+    if (!ok){
+      showErr("customer-data.js did not finish loading. Hard refresh (Ctrl+Shift+R).");
+      subtitle.textContent = "";
+      return;
+    }
 
     try{
       const list = await window.initializeCustomerData();
@@ -284,7 +289,8 @@
 
       btnSave.disabled = false;
       btnDelete.disabled = false;
-    } catch (e){
+    } catch(e){
+      console.error(e);
       showErr(e?.message || "Failed to load customer.");
       subtitle.textContent = "";
     }
@@ -307,12 +313,12 @@
 
       if (!updated) throw new Error("Update failed (no row returned).");
 
-      // Update header with new info
       title.textContent = `${updated.first_name || ""} ${updated.last_name || ""}`.trim() || "Customer Profile";
       subtitle.textContent = updated.email || "";
 
       showOk("Saved");
-    } catch (e){
+    } catch(e){
+      console.error(e);
       showErr(e?.message || "Save failed.");
     } finally{
       btnSave.disabled = false;
@@ -321,23 +327,26 @@
 
   btnDelete.addEventListener("click", async () => {
     clearErr();
-    const ok = confirm("Delete this customer? This cannot be undone.");
-    if (!ok) return;
+    const go = confirm("Delete this customer? This cannot be undone.");
+    if (!go) return;
 
     btnDelete.disabled = true;
 
     try{
       await window.deleteCustomerInSupabase(id);
       location.href = "./customers.html";
-    } catch (e){
+    } catch(e){
+      console.error(e);
       showErr(e?.message || "Delete failed.");
       btnDelete.disabled = false;
     }
   });
 
-  loadCustomer();
+  // Start after DOM is ready
+  document.addEventListener("DOMContentLoaded", loadCustomer);
 </script>
 
 </body>
 </html>
+
 
