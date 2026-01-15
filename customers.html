@@ -26,10 +26,12 @@
 
     .wrap{ max-width:1100px; margin:0 auto; padding:16px;}
     .top{ display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+    .brand{ display:flex; flex-direction:column; gap:2px;}
     .brand h1{ font-size:18px; margin:0; font-weight:800;}
-    .brand p{ margin:4px 0 0; font-size:12px; color:var(--muted);}
+    .brand p{ margin:0; font-size:12px; color:var(--muted);}
 
     .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+
     .btn{
       background:transparent;
       border:1px solid rgba(255,255,255,.14);
@@ -39,10 +41,7 @@
       cursor:pointer;
       font-size:14px;
       text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      user-select:none;
+      white-space:nowrap;
     }
     .btn:hover{ border-color:rgba(255,255,255,.28); }
     .btn[disabled]{ opacity:.55; cursor:not-allowed; }
@@ -50,10 +49,6 @@
     .btnPrimary{
       background:rgba(77,163,255,.16);
       border-color:rgba(77,163,255,.40);
-    }
-    .btnDanger{
-      background:rgba(255,90,106,.15);
-      border-color:rgba(255,90,106,.40);
     }
 
     .pill{
@@ -81,6 +76,8 @@
     }
     input::placeholder{ color:rgba(231,238,252,.55); }
 
+    .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+
     .grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
@@ -101,14 +98,16 @@
       transform: translateY(-1px);
       border-color: rgba(77,163,255,.35);
     }
+    .card:active{ transform: translateY(0px) scale(.995); }
 
-    .name{ font-weight:800; margin:0 0 6px; font-size:16px;}
-    .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35; }
-    .line strong{ color:var(--text); font-weight:650; }
+    .name{ font-weight:800; margin:0 0 8px; font-size:16px;}
+    .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35;}
+    .line strong{ color:var(--text); font-weight:650;}
 
     .error{
       background:rgba(255,90,106,.12);
       border:1px solid rgba(255,90,106,.35);
+      color:#ffd3d8;
       padding:12px;
       border-radius:14px;
       margin-top:12px;
@@ -116,71 +115,7 @@
       white-space:pre-wrap;
     }
 
-    /* ---------- Modal (Add Customer) ---------- */
-    .overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.45);
-      display:none;
-      z-index:100;
-    }
-    .modal{
-      position:fixed;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      width:min(720px, 94vw);
-      background:rgba(11,18,32,.98);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:18px;
-      box-shadow:0 20px 70px rgba(0,0,0,.55);
-      display:none;
-      z-index:110;
-    }
-    .modalHeader{
-      padding:14px 16px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .modalHeader h2{ margin:0; font-size:16px; font-weight:850; }
-    .modalHeader p{ margin:4px 0 0; font-size:12px; color:var(--muted); }
-
-    .modalBody{ padding:16px; }
-    .formGrid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-    .full{ grid-column:1 / -1; }
-
-    label{ font-size:12px; color:var(--muted); display:block; margin:0 0 6px; }
-    .field input{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      outline:none;
-      box-sizing:border-box;
-    }
-
-    .modalActions{
-      padding:14px 16px;
-      border-top:1px solid rgba(255,255,255,.10);
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-    }
-
-    @media (max-width:640px){
-      .formGrid{ grid-template-columns:1fr; }
-      .full{ grid-column:auto; }
-    }
+    footer{ color:rgba(231,238,252,.55); font-size:12px; padding:12px 0 30px; }
   </style>
 </head>
 
@@ -196,21 +131,22 @@
 
       <div class="actions" style="flex:1; justify-content:flex-end;">
         <div class="search">
-          <input id="q" type="search" placeholder="Search customers…" />
+          <input id="q" type="search" placeholder="Search name, phone, email, city, street..." />
         </div>
 
-        <button class="btn btnPrimary" id="btnAdd" title="Add a new customer">+ Add</button>
+        <button class="btn btnPrimary" id="btnAdd" type="button">+ Add</button>
 
-        <button class="btn btnPrimary" id="btnLogin">Login</button>
-        <button class="btn" id="btnLogout" style="display:none;">Logout</button>
+        <button class="btn btnPrimary" id="btnLogin" type="button">Login</button>
+        <button class="btn" id="btnLogout" type="button" style="display:none;">Logout</button>
         <div class="pill" id="authPill" style="display:none;"></div>
 
         <a class="btn" href="./index.html">Dashboard</a>
       </div>
     </div>
 
-    <div class="pill" style="margin-top:10px;">
-      <span id="count">0</span> customers loaded
+    <div class="stats">
+      <div class="pill"><span id="count">0</span> customers loaded</div>
+      <div class="pill"><span id="shown">0</span> shown</div>
     </div>
   </div>
 </header>
@@ -218,107 +154,69 @@
 <main class="wrap">
   <div id="msg" class="error"></div>
   <div id="grid" class="grid"></div>
+  <footer class="muted">
+    If customers don’t load, it usually means you’re not logged in or RLS is blocking reads.
+  </footer>
 </main>
 
-<!-- Add Customer Modal -->
-<div id="overlay" class="overlay"></div>
-
-<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-  <div class="modalHeader">
-    <div>
-      <h2 id="modalTitle">Add Customer</h2>
-      <p>Create a new customer in Supabase.</p>
-    </div>
-    <button class="btn" id="btnCloseModal" type="button">Close</button>
-  </div>
-
-  <div class="modalBody">
-    <div class="formGrid">
-      <div class="field">
-        <label>First name</label>
-        <input id="a_first" type="text" autocomplete="given-name" />
-      </div>
-      <div class="field">
-        <label>Last name</label>
-        <input id="a_last" type="text" autocomplete="family-name" />
-      </div>
-
-      <div class="field full">
-        <label>Email</label>
-        <input id="a_email" type="email" autocomplete="email" />
-      </div>
-
-      <div class="field">
-        <label>Mobile phone</label>
-        <input id="a_mobile" type="text" autocomplete="tel" />
-      </div>
-      <div class="field">
-        <label>Home phone</label>
-        <input id="a_home" type="text" />
-      </div>
-
-      <div class="field">
-        <label>Work phone</label>
-        <input id="a_work" type="text" />
-      </div>
-      <div class="field">
-        <label>Company</label>
-        <input id="a_company" type="text" autocomplete="organization" />
-      </div>
-
-      <div class="field full">
-        <label>Address (single line)</label>
-        <input id="a_address" type="text" placeholder="Street, City, State ZIP" autocomplete="street-address" />
-      </div>
-    </div>
-
-    <div id="addMsg" class="error" style="display:none; margin-top:12px;"></div>
-  </div>
-
-  <div class="modalActions">
-    <button class="btn" id="btnCancelAdd" type="button">Cancel</button>
-    <button class="btn btnPrimary" id="btnCreate" type="button">Create Customer</button>
-  </div>
-</div>
-
+<!-- customer-data.js must set window.supabase + window.initializeCustomerData etc -->
 <script type="module" src="./customer-data.js"></script>
 
 <script>
   let ALL = [];
 
   const $ = (id) => document.getElementById(id);
+  const msg = $("msg");
+  const grid = $("grid");
+  const btnLogin = $("btnLogin");
+  const btnLogout = $("btnLogout");
+  const authPill = $("authPill");
+  const btnAdd = $("btnAdd");
 
   function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
 
-  function getFirst(c){ return c?.first_name ?? c?.firstName ?? ""; }
-  function getLast(c){ return c?.last_name ?? c?.lastName ?? ""; }
-  function getEmail(c){ return c?.email ?? ""; }
-  function getMobile(c){ return c?.mobile_phone ?? c?.mobilePhone ?? ""; }
-  function getAddress(c){ return c?.address ?? ""; }
+  // IMPORTANT: Your data is snake_case
+  function getName(c){
+    return `${c?.first_name || ""} ${c?.last_name || ""}`.trim() || "(No name)";
+  }
+  function getEmail(c){ return c?.email || ""; }
+  function getPhone(c){ return c?.mobile_phone || c?.home_phone || c?.work_phone || ""; }
+  function getAddress(c){ return c?.address || ""; }
 
-  function showMsg(text){
-    const el = $("msg");
-    el.style.display = text ? "block" : "none";
-    el.textContent = text || "";
+  function customerSearchBlob(c){
+    return [
+      c?.first_name, c?.last_name, c?.email,
+      c?.mobile_phone, c?.home_phone, c?.work_phone,
+      c?.address, c?.city, c?.state, c?.zip,
+      c?.company, c?.notes
+    ].map(norm).join(" ");
+  }
+
+  function setMsg(text){
+    msg.style.display = text ? "block" : "none";
+    msg.textContent = text || "";
   }
 
   function render(list){
-    const grid = $("grid");
-    $("count").textContent = list.length;
+    $("shown").textContent = list.length;
+    $("count").textContent = ALL.length;
 
     if (!list.length){
-      grid.innerHTML = `<div class="card" style="cursor:default;"><p class="line"><strong>No customers found.</strong></p></div>`;
+      grid.innerHTML = `<div class="card" style="cursor:default;">
+        <p class="name">No customers found.</p>
+        <p class="line">Try a different search.</p>
+      </div>`;
       return;
     }
 
     grid.innerHTML = list.map(c => {
-      const name = `${getFirst(c)} ${getLast(c)}`.trim() || "(No name)";
+      const name = getName(c);
       const email = getEmail(c);
-      const phone = getMobile(c);
+      const phone = getPhone(c);
       const addr = getAddress(c);
 
       return `
-        <div class="card" data-id="${String(c.id)}">
+        <div class="card" data-id="${c.id}">
           <p class="name">${escapeHtml(name)}</p>
           <p class="line"><strong>Email:</strong> ${escapeHtml(email)}</p>
           <p class="line"><strong>Phone:</strong> ${escapeHtml(phone)}</p>
@@ -336,149 +234,122 @@
   }
 
   function escapeHtml(str){
-    return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+    return String(str ?? "").replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[s]));
+  }
+
+  async function refreshAuthUI(){
+    if (!window.supabase?.auth) return;
+
+    const { data } = await window.supabase.auth.getSession();
+    const email = data?.session?.user?.email || "";
+
+    btnLogin.style.display = email ? "none" : "inline-block";
+    btnLogout.style.display = email ? "inline-block" : "none";
+    authPill.style.display = email ? "inline-flex" : "none";
+    authPill.textContent = email ? `Logged in: ${email}` : "";
   }
 
   async function loadCustomers(){
     try{
-      showMsg("");
+      setMsg("");
       ALL = await window.initializeCustomerData();
       render(ALL);
     } catch (e){
       console.error(e);
-      showMsg("Not logged in. Click Login to view customers.\n\n" + (e?.message || e));
+      ALL = [];
       render([]);
+      setMsg("Not logged in or blocked by RLS.\n\nClick Login, then refresh this page.\n\n" + (e?.message || e));
     }
   }
 
-  $("q").addEventListener("input", e => {
+  $("q").addEventListener("input", (e) => {
     const q = norm(e.target.value);
-    if (!q) return render(ALL);
-
-    const filtered = ALL.filter(c => {
-      const blob = [
-        getFirst(c), getLast(c), getEmail(c),
-        getMobile(c), (c?.home_phone ?? c?.homePhone ?? ""),
-        (c?.work_phone ?? c?.workPhone ?? ""), getAddress(c),
-        (c?.city ?? ""), (c?.state ?? ""), (c?.zip ?? ""), (c?.company ?? "")
-      ].map(norm).join(" ");
-      return blob.includes(q);
-    });
-
+    const filtered = !q ? ALL : ALL.filter(c => customerSearchBlob(c).includes(q));
     render(filtered);
   });
 
   // ---------- AUTH ----------
-  async function refreshAuthUI(){
-    const { data } = await window.supabase.auth.getSession();
-    const email = data?.session?.user?.email;
-
-    $("btnLogin").style.display = email ? "none" : "inline-flex";
-    $("btnLogout").style.display = email ? "inline-flex" : "none";
-    $("authPill").style.display = email ? "inline-flex" : "none";
-    $("authPill").textContent = email ? `Logged in: ${email}` : "";
-
-    // Only allow Add when logged in
-    $("btnAdd").disabled = !email;
-  }
-
-  $("btnLogin").onclick = async () => {
-    const email = prompt("Enter your email:");
-    if (!email) return;
-
-    await window.supabase.auth.signInWithOtp({
-      email,
-      options:{ emailRedirectTo: location.href }
-    });
-
-    alert("Check your email for the login link.");
-  };
-
-  $("btnLogout").onclick = async () => {
-    await window.supabase.auth.signOut();
-    await refreshAuthUI();
-    await loadCustomers();
-  };
-
-  window.supabase.auth.onAuthStateChange(async () => {
-    await refreshAuthUI();
-    await loadCustomers();
-  });
-
-  // ---------- ADD CUSTOMER MODAL ----------
-  function openModal(){
-    $("addMsg").style.display = "none";
-    $("addMsg").textContent = "";
-
-    // clear fields
-    $("a_first").value = "";
-    $("a_last").value = "";
-    $("a_email").value = "";
-    $("a_mobile").value = "";
-    $("a_home").value = "";
-    $("a_work").value = "";
-    $("a_company").value = "";
-    $("a_address").value = "";
-
-    $("overlay").style.display = "block";
-    $("modal").style.display = "block";
-
-    setTimeout(()=> $("a_first").focus(), 0);
-  }
-
-  function closeModal(){
-    $("overlay").style.display = "none";
-    $("modal").style.display = "none";
-  }
-
-  $("btnAdd").addEventListener("click", () => openModal());
-  $("btnCloseModal").addEventListener("click", closeModal);
-  $("btnCancelAdd").addEventListener("click", closeModal);
-  $("overlay").addEventListener("click", closeModal);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
-
-  $("btnCreate").addEventListener("click", async () => {
+  btnLogin.onclick = async () => {
     try{
-      $("btnCreate").disabled = true;
+      const email = prompt("Enter your email for a magic login link:");
+      if (!email) return;
 
-      const payload = {
-        firstName: $("a_first").value.trim(),
-        lastName: $("a_last").value.trim(),
-        email: $("a_email").value.trim(),
-        mobilePhone: $("a_mobile").value.trim(),
-        homePhone: $("a_home").value.trim(),
-        workPhone: $("a_work").value.trim(),
-        company: $("a_company").value.trim(),
-        address: $("a_address").value.trim(),
-      };
+      await window.supabase.auth.signInWithOtp({
+        email,
+        options:{ emailRedirectTo: location.href }
+      });
 
-      // basic validation: require at least a name
-      if (!payload.firstName && !payload.lastName){
-        throw new Error("Please enter at least a first or last name.");
-      }
-
-      const created = await window.createCustomerInSupabase(payload);
-      if (!created) throw new Error("Create did not return a customer.");
-
-      closeModal();
-
-      // Reload to include new record + refresh cache
-      await loadCustomers();
-
-      // Optional: jump to new customer page
-      location.href = `customer.html?id=${encodeURIComponent(created.id)}`;
-
+      alert("Check your email for the login link, then come back here.");
     } catch (e){
       console.error(e);
-      $("addMsg").textContent = e?.message || String(e);
-      $("addMsg").style.display = "block";
-    } finally{
-      $("btnCreate").disabled = false;
+      setMsg("Login failed:\n\n" + (e?.message || e));
     }
-  });
+  };
 
-  // boot
-  refreshAuthUI().then(loadCustomers);
+  btnLogout.onclick = async () => {
+    try{
+      await window.supabase.auth.signOut();
+      await refreshAuthUI();
+      await loadCustomers();
+    } catch (e){
+      console.error(e);
+      setMsg("Logout failed:\n\n" + (e?.message || e));
+    }
+  };
+
+  // ---------- ADD ----------
+  btnAdd.onclick = async () => {
+    try{
+      setMsg("");
+      // Require login
+      const { data } = await window.supabase.auth.getSession();
+      if (!data?.session) {
+        setMsg("Please Login first, then click + Add again.");
+        return;
+      }
+
+      const first = prompt("First name:") || "";
+      const last = prompt("Last name:") || "";
+      const email = prompt("Email (optional):") || "";
+      const mobile = prompt("Mobile phone (optional):") || "";
+      const address = prompt("Address (optional):") || "";
+
+      const created = await window.createCustomerInSupabase({
+        firstName: first,
+        lastName: last,
+        email,
+        mobilePhone: mobile,
+        address
+      });
+
+      if (!created?.id) throw new Error("Create did not return a customer id.");
+
+      // reload list so it appears immediately
+      await loadCustomers();
+
+      // open detail page
+      location.href = `customer.html?id=${encodeURIComponent(created.id)}`;
+    } catch (e){
+      console.error(e);
+      setMsg("Add failed:\n\n" + (e?.message || e));
+    }
+  };
+
+  // Keep UI in sync if session changes
+  if (window.supabase?.auth?.onAuthStateChange) {
+    window.supabase.auth.onAuthStateChange(async () => {
+      await refreshAuthUI();
+      await loadCustomers();
+    });
+  }
+
+  // Boot
+  (async () => {
+    await refreshAuthUI();
+    await loadCustomers();
+  })();
 </script>
 
 </body>
