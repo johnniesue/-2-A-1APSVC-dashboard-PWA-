@@ -6,15 +6,21 @@
   <title>A-1APSVC • Customers</title>
 
   <style>
-    :root { --bg:#0b1220; --card:#111b2e; --muted:#93a4c7; --text:#e7eefc; --accent:#4da3ff; --danger:#ff5a6a; }
-
+    :root {
+      --bg:#0b1220;
+      --card:#111b2e;
+      --muted:#93a4c7;
+      --text:#e7eefc;
+      --accent:#4da3ff;
+      --danger:#ff5a6a;
+      --ok:#35d07f;
+    }
     body{
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:linear-gradient(135deg,#0b1220,#182a4a);
       color:var(--text);
     }
-
     header{
       position:sticky; top:0;
       background:rgba(11,18,32,.9);
@@ -23,14 +29,11 @@
       padding:14px 16px;
       z-index:10;
     }
-
     .wrap{ max-width:1100px; margin:0 auto; padding:16px;}
     .top{ display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
     .brand h1{ font-size:18px; margin:0; font-weight:800;}
     .brand p{ margin:4px 0 0; font-size:12px; color:var(--muted);}
-
-    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-
+    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
     .btn{
       background:transparent;
       border:1px solid rgba(255,255,255,.14);
@@ -43,18 +46,17 @@
       display:inline-flex;
       align-items:center;
       gap:8px;
+      user-select:none;
     }
     .btn:hover{ border-color:rgba(255,255,255,.28); }
-
     .btnPrimary{
       background:rgba(77,163,255,.16);
       border-color:rgba(77,163,255,.40);
     }
-    .btnDanger{
-      background:rgba(255,90,106,.12);
-      border-color:rgba(255,90,106,.35);
+    .btnOk{
+      background:rgba(53,208,127,.12);
+      border-color:rgba(53,208,127,.35);
     }
-
     .pill{
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.10);
@@ -67,9 +69,8 @@
       gap:8px;
       white-space:nowrap;
     }
-
     .search{ flex:1; min-width:260px; }
-    input{
+    input, textarea{
       width:100%;
       padding:10px 12px;
       border-radius:12px;
@@ -79,15 +80,12 @@
       outline:none;
       box-sizing:border-box;
     }
-    input::placeholder{ color:rgba(231,238,252,.55); }
-
     .grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
       gap:12px;
       margin:16px 0 40px;
     }
-
     .card{
       background:rgba(17,27,46,.9);
       border:1px solid rgba(255,255,255,.10);
@@ -95,15 +93,10 @@
       padding:14px;
       box-shadow:0 10px 30px rgba(0,0,0,.25);
       cursor:pointer;
-      transition: transform .08s ease, border-color .08s ease;
     }
-    .card:hover{ transform: translateY(-1px); border-color: rgba(77,163,255,.35); }
-    .card:active{ transform: translateY(0px) scale(.995); }
-
-    .name{ font-weight:800; margin:0 0 6px; font-size:16px;}
-    .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35;}
-    .line strong{ color:var(--text); font-weight:650; }
-
+    .name{ font-weight:800; margin:0 0 8px; font-size:16px;}
+    .line{ margin:0; font-size:13px; color:var(--muted); }
+    .line strong{ color:var(--text); font-weight:700; }
     .error{
       background:rgba(255,90,106,.12);
       border:1px solid rgba(255,90,106,.35);
@@ -111,83 +104,40 @@
       border-radius:14px;
       margin-top:12px;
       display:none;
-      color:#ffd3d8;
-    }
-    .ok{
-      background:rgba(77,163,255,.12);
-      border:1px solid rgba(77,163,255,.35);
-      padding:12px;
-      border-radius:14px;
-      margin-top:12px;
-      display:none;
-      color:#d7ecff;
     }
 
     /* ---------- Modal ---------- */
     .overlay{
-      position:fixed;
-      inset:0;
+      position:fixed; inset:0;
       background:rgba(0,0,0,.55);
       display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
       z-index:50;
     }
     .modal{
-      position:fixed;
-      top:50%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      width:min(760px, 92vw);
-      background:rgba(11,18,32,.98);
+      width:min(720px, 96vw);
+      background:rgba(17,27,46,.98);
       border:1px solid rgba(255,255,255,.12);
       border-radius:18px;
-      box-shadow:0 30px 80px rgba(0,0,0,.55);
-      display:none;
-      z-index:60;
+      padding:16px;
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
     }
-    .modalHeader{
-      padding:14px 16px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .modalHeader h2{ margin:0; font-size:16px; font-weight:850; }
-    .modalBody{ padding:16px; }
-
-    .formGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
-    .full{ grid-column: 1 / -1; }
-    .field label{
-      display:block;
-      font-size:12px;
-      color:var(--muted);
-      margin:0 0 6px;
-    }
-    .field input{
-      width:100%;
-      box-sizing:border-box;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      outline:none;
-    }
-    .modalActions{
-      margin-top:14px;
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      flex-wrap:wrap;
+    .modal h2{ margin:0 0 12px; font-size:18px; }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .field{ flex:1; min-width:220px; }
+    label{ font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
+    .modalActions{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap; }
+    .btnDanger{
+      background:rgba(255,90,106,.15);
+      border-color:rgba(255,90,106,.4);
     }
   </style>
 </head>
 
 <body>
+
 <header>
   <div class="wrap">
     <div class="top">
@@ -198,25 +148,25 @@
 
       <div class="actions" style="flex:1; justify-content:flex-end;">
         <div class="search">
-          <input id="q" type="search" placeholder="Search name, phone, email, city, street..." />
+          <input id="q" type="search" placeholder="Search name, phone, email, city, street…" />
         </div>
+
+        <button class="btn btnPrimary" id="btnAdd" type="button">+ Add Customer</button>
 
         <button class="btn btnPrimary" id="btnLogin" type="button">Login</button>
         <button class="btn" id="btnLogout" type="button" style="display:none;">Logout</button>
         <div class="pill" id="authPill" style="display:none;"></div>
 
-        <button class="btn btnPrimary" id="btnAdd" type="button">+ Add Customer</button>
-
         <a class="btn" href="./index.html">Dashboard</a>
       </div>
     </div>
 
-    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+    <div class="row" style="margin-top:10px; align-items:center;">
       <div class="pill"><span id="count">0</span> customers loaded</div>
       <div class="pill"><span id="shown">0</span> shown</div>
+      <div class="pill" id="supabasePill">Loading…</div>
     </div>
 
-    <div id="msgOk" class="ok"></div>
     <div id="msg" class="error"></div>
   </div>
 </header>
@@ -225,224 +175,81 @@
   <div id="grid" class="grid"></div>
 </main>
 
-<!-- Modal -->
-<div id="overlay" class="overlay"></div>
-<div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="modalHeader">
-    <h2>Add Customer</h2>
-    <button class="btn" id="btnCloseModal" type="button">Close</button>
-  </div>
-  <div class="modalBody">
-    <div class="formGrid">
-      <div class="field">
-        <label>First name</label>
-        <input id="f_first" type="text" />
-      </div>
-      <div class="field">
-        <label>Last name</label>
-        <input id="f_last" type="text" />
-      </div>
-
-      <div class="field full">
-        <label>Email</label>
-        <input id="f_email" type="email" />
-      </div>
-
-      <div class="field">
-        <label>Mobile</label>
-        <input id="f_mobile" type="text" />
-      </div>
-      <div class="field">
-        <label>Home</label>
-        <input id="f_home" type="text" />
-      </div>
-
-      <div class="field full">
-        <label>Work</label>
-        <input id="f_work" type="text" />
-      </div>
-
-      <div class="field full">
-        <label>Company</label>
-        <input id="f_company" type="text" />
-      </div>
-
-      <div class="field full">
-        <label>Address (single line)</label>
-        <input id="f_address" type="text" placeholder="123 Main St, City ST 12345" />
-      </div>
-    </div>
-
-    <div class="modalActions">
-      <button class="btn" id="btnCancel" type="button">Cancel</button>
-      <button class="btn btnPrimary" id="btnCreate" type="button">Create</button>
-    </div>
-  </div>
-</div>
-
-<!-- MUST load customer-data.js first -->
+<!-- Important: this loads supabase + data helpers and sets window.initializeCustomerData etc -->
 <script type="module" src="./customer-data.js"></script>
 
 <script>
+  const qEl = document.getElementById("q");
+  const grid = document.getElementById("grid");
+  const msg = document.getElementById("msg");
+  const countEl = document.getElementById("count");
+  const shownEl = document.getElementById("shown");
+  const supabasePill = document.getElementById("supabasePill");
+
+  const btnLogin = document.getElementById("btnLogin");
+  const btnLogout = document.getElementById("btnLogout");
+  const authPill = document.getElementById("authPill");
+  const btnAdd = document.getElementById("btnAdd");
+
   let ALL = [];
-  const $ = (id) => document.getElementById(id);
 
   function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
 
-  function showError(msg){
-    const el = $("msg");
-    el.textContent = msg || "";
-    el.style.display = msg ? "block" : "none";
-  }
-  function showOk(msg){
-    const el = $("msgOk");
-    el.textContent = msg || "";
-    el.style.display = msg ? "block" : "none";
-    if (msg) setTimeout(()=>{ el.style.display="none"; }, 1800);
+  function showErr(text){
+    if (!text){
+      msg.style.display = "none";
+      msg.textContent = "";
+      return;
+    }
+    msg.textContent = text;
+    msg.style.display = "block";
   }
 
-  function fullName(c){
-    return `${c.first_name||""} ${c.last_name||""}`.trim() || "(No name)";
+  function esc(s){
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;");
   }
 
-  function searchBlob(c){
-    return [
-      c.first_name, c.last_name, c.email,
-      c.mobile_phone, c.home_phone, c.work_phone,
-      c.address, c.city, c.state, c.zip,
-      c.company, c.notes
-    ].map(norm).join(" ");
+  function customerBlob(c){
+    const parts = [
+      c.first_name, c.last_name, c.company,
+      c.email, c.mobile_phone, c.home_phone, c.work_phone,
+      c.address, c.city, c.state, c.zip
+    ].filter(Boolean).join(" ");
+    return norm(parts);
   }
 
-  function escapeHtml(str){
-    return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  function cardHtml(c){
+    const name = `${c.first_name||""} ${c.last_name||""}`.trim() || "(No name)";
+    const phone = c.mobile_phone || c.home_phone || c.work_phone || "";
+    const addr = c.address || [c.city, c.state, c.zip].filter(Boolean).join(" ");
+    return `
+      <div class="card" onclick="location.href='customer.html?id=${encodeURIComponent(c.id)}'">
+        <p class="name">${esc(name)}</p>
+        <p class="line"><strong>Email:</strong> ${esc(c.email||"")}</p>
+        <p class="line"><strong>Phone:</strong> ${esc(phone)}</p>
+        <p class="line"><strong>Address:</strong> ${esc(addr)}</p>
+      </div>
+    `;
   }
 
   function render(list){
-    const grid = $("grid");
-    $("shown").textContent = list.length;
+    countEl.textContent = ALL.length;
+    shownEl.textContent = list.length;
 
     if (!list.length){
-      grid.innerHTML = `<div class="card" style="cursor:default;"><p class="line"><strong>No customers found.</strong></p><p class="line">Try a different search.</p></div>`;
+      grid.innerHTML = `<div class="card"><p class="line">No customers found.</p></div>`;
       return;
     }
-
-    grid.innerHTML = list.map(c => {
-      const name = fullName(c);
-      const phone = c.mobile_phone || c.home_phone || c.work_phone || "";
-      const email = c.email || "";
-      const addr = c.address || "";
-
-      return `
-        <div class="card" data-id="${escapeHtml(c.id)}">
-          <p class="name">${escapeHtml(name)}</p>
-          <p class="line"><strong>Email:</strong> ${escapeHtml(email)}</p>
-          <p class="line"><strong>Phone:</strong> ${escapeHtml(phone)}</p>
-          <p class="line"><strong>Address:</strong> ${escapeHtml(addr)}</p>
-        </div>
-      `;
-    }).join("");
-
-    grid.onclick = (e) => {
-      const card = e.target.closest(".card");
-      if (!card) return;
-      const id = card.getAttribute("data-id");
-      if (!id) return;
-      location.href = `customer.html?id=${encodeURIComponent(id)}`;
-    };
+    grid.innerHTML = list.map(cardHtml).join("");
   }
 
-  async function loadCustomers(){
-    showError("");
-
-    if (typeof window.initializeCustomerData !== "function") {
-      showError("customer-data.js did not load yet. Hard refresh (Ctrl+Shift+R).");
-      return;
-    }
-
-    try{
-      ALL = await window.initializeCustomerData();
-      $("count").textContent = ALL.length;
-
-      const q = norm($("q").value);
-      const filtered = !q ? ALL : ALL.filter(c => searchBlob(c).includes(q));
-      render(filtered);
-    } catch (e){
-      console.error(e);
-      showError("Not logged in or blocked by RLS. Click Login to view customers.");
-      render([]);
-    }
-  }
-
-  $("q").addEventListener("input", () => {
-    const q = norm($("q").value);
-    const filtered = !q ? ALL : ALL.filter(c => searchBlob(c).includes(q));
-    render(filtered);
-  });
-
-  // ----- Modal -----
-  function openModal(){
-    $("overlay").style.display = "block";
-    $("modal").style.display = "block";
-    $("modal").setAttribute("aria-hidden","false");
-  }
-  function closeModal(){
-    $("overlay").style.display = "none";
-    $("modal").style.display = "none";
-    $("modal").setAttribute("aria-hidden","true");
-  }
-
-  $("btnAdd").onclick = () => {
-    openModal();
-    $("f_first").focus();
-  };
-  $("btnCloseModal").onclick = closeModal;
-  $("btnCancel").onclick = closeModal;
-  $("overlay").onclick = closeModal;
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
-
-  $("btnCreate").onclick = async () => {
-    try{
-      if (typeof window.createCustomerInSupabase !== "function") {
-        throw new Error("createCustomerInSupabase is missing (customer-data.js not loaded).");
-      }
-
-      const payload = {
-        firstName: $("f_first").value.trim(),
-        lastName: $("f_last").value.trim(),
-        email: $("f_email").value.trim(),
-        mobilePhone: $("f_mobile").value.trim(),
-        homePhone: $("f_home").value.trim(),
-        workPhone: $("f_work").value.trim(),
-        company: $("f_company").value.trim(),
-        address: $("f_address").value.trim(),
-      };
-
-      const created = await window.createCustomerInSupabase(payload);
-      if (!created) throw new Error("Create did not return a customer.");
-
-      closeModal();
-      showOk("Customer added");
-
-      await loadCustomers();
-      location.href = `customer.html?id=${encodeURIComponent(created.id)}`;
-    } catch (e){
-      console.error(e);
-      showError(e?.message || "Create failed.");
-    }
-  };
-
-  // ----- AUTH UI -----
   async function refreshAuthUI(){
-    const btnLogin = $("btnLogin");
-    const btnLogout = $("btnLogout");
-    const pill = $("authPill");
-
-    if (!window.supabase?.auth) {
-      btnLogin.style.display = "none";
-      btnLogout.style.display = "none";
-      pill.style.display = "inline-flex";
-      pill.textContent = "Supabase not loaded";
+    if (!window.supabase?.auth){
+      supabasePill.textContent = "Supabase not loaded";
       return;
     }
 
@@ -451,42 +258,228 @@
 
     btnLogin.style.display = email ? "none" : "inline-flex";
     btnLogout.style.display = email ? "inline-flex" : "none";
-    pill.style.display = email ? "inline-flex" : "none";
-    pill.textContent = email ? `Logged in: ${email}` : "";
+    authPill.style.display = email ? "inline-flex" : "none";
+    authPill.textContent = email ? `Logged in: ${email}` : "";
+
+    supabasePill.textContent = email ? "Auth OK" : "Not logged in";
+    supabasePill.className = "pill " + (email ? "btnOk" : "");
   }
 
-  $("btnLogin").onclick = async () => {
+  async function loadCustomers(){
+    // Timing fix: wait for customer-data.js to attach globals
+    if (typeof window.initializeCustomerData !== "function"){
+      showErr("Loading customer-data… (auto retry)");
+      setTimeout(loadCustomers, 250);
+      return;
+    }
+
     try{
-      const email = prompt("Enter your email:");
-      if (!email) return;
+      showErr("");
+      ALL = await window.initializeCustomerData();
 
-      await window.supabase.auth.signInWithOtp({
-        email,
-        options:{ emailRedirectTo: location.href }
-      });
-
-      alert("Check your email for the login link.");
+      const q = norm(qEl.value);
+      const filtered = !q ? ALL : ALL.filter(c => customerBlob(c).includes(q));
+      render(filtered);
+      showErr("");
     } catch (e){
       console.error(e);
-      showError(e?.message || "Login failed.");
+      showErr(e?.message || "Could not load customers. Try Login.");
+      ALL = [];
+      render([]);
     }
+  }
+
+  qEl.addEventListener("input", () => {
+    const q = norm(qEl.value);
+    const filtered = !q ? ALL : ALL.filter(c => customerBlob(c).includes(q));
+    render(filtered);
+  });
+
+  // ---------- AUTH ----------
+  btnLogin.onclick = async () => {
+    if (!window.supabase?.auth){
+      showErr("Supabase not loaded yet. Hard refresh (Ctrl+Shift+R).");
+      return;
+    }
+
+    const email = prompt("Enter your email for magic link login:");
+    if (!email) return;
+
+    await window.supabase.auth.signInWithOtp({
+      email,
+      options:{ emailRedirectTo: location.href }
+    });
+
+    alert("Check your email for the login link.");
   };
 
-  $("btnLogout").onclick = async () => {
+  btnLogout.onclick = async () => {
     await window.supabase.auth.signOut();
     await refreshAuthUI();
     await loadCustomers();
   };
 
-  if (window.supabase?.auth?.onAuthStateChange) {
+  // ---------- ADD CUSTOMER MODAL ----------
+  const overlay = document.createElement("div");
+  overlay.className = "overlay";
+  overlay.innerHTML = `
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Add Customer">
+      <h2>Add Customer</h2>
+
+      <div class="row">
+        <div class="field">
+          <label>First Name</label>
+          <input id="m_first" autocomplete="given-name" />
+        </div>
+        <div class="field">
+          <label>Last Name</label>
+          <input id="m_last" autocomplete="family-name" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Email</label>
+          <input id="m_email" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label>Mobile Phone</label>
+          <input id="m_mobile" autocomplete="tel" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Home Phone</label>
+          <input id="m_home" autocomplete="tel" />
+        </div>
+        <div class="field">
+          <label>Work Phone</label>
+          <input id="m_work" autocomplete="tel" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Address (street, city, state zip)</label>
+          <input id="m_address" placeholder="Street, City, State ZIP" />
+        </div>
+      </div>
+
+      <div class="modalActions">
+        <button class="btn" id="m_cancel" type="button">Cancel</button>
+        <button class="btn btnPrimary" id="m_save" type="button">Save</button>
+      </div>
+
+      <div id="m_msg" class="error" style="margin-top:12px;"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  function openModal(){
+    document.getElementById("m_msg").style.display = "none";
+    overlay.style.display = "flex";
+    document.getElementById("m_first").focus();
+  }
+  function closeModal(){
+    overlay.style.display = "none";
+  }
+
+  btnAdd.onclick = async () => {
+    if (typeof window.createCustomerInSupabase !== "function"){
+      showErr("Customer create not available yet. Hard refresh (Ctrl+Shift+R).");
+      return;
+    }
+    await refreshAuthUI();
+    openModal();
+  };
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeModal();
+  });
+
+  overlay.querySelector("#m_cancel").onclick = closeModal;
+
+  overlay.querySelector("#m_save").onclick = async () => {
+    const mmsg = overlay.querySelector("#m_msg");
+    const showMErr = (t) => {
+      mmsg.textContent = t;
+      mmsg.style.display = t ? "block" : "none";
+    };
+
+    try{
+      showMErr("");
+
+      // Basic auth check
+      if (!window.supabase?.auth){
+        showMErr("Supabase not loaded.");
+        return;
+      }
+      const { data } = await window.supabase.auth.getSession();
+      if (!data?.session){
+        showMErr("Not logged in. Click Login first.");
+        return;
+      }
+
+      const firstName = overlay.querySelector("#m_first").value.trim();
+      const lastName  = overlay.querySelector("#m_last").value.trim();
+
+      if (!firstName && !lastName){
+        showMErr("Please enter at least a first or last name.");
+        return;
+      }
+
+      const created = await window.createCustomerInSupabase({
+        firstName,
+        lastName,
+        email: overlay.querySelector("#m_email").value.trim(),
+        mobilePhone: overlay.querySelector("#m_mobile").value.trim(),
+        homePhone: overlay.querySelector("#m_home").value.trim(),
+        workPhone: overlay.querySelector("#m_work").value.trim(),
+        address: overlay.querySelector("#m_address").value.trim(),
+      });
+
+      closeModal();
+
+      // Reload list + jump to new profile if we have it
+      await loadCustomers();
+      if (created?.id){
+        location.href = `customer.html?id=${encodeURIComponent(created.id)}`;
+      }
+    } catch(e){
+      console.error(e);
+      showMErr(e?.message || "Failed to create customer.");
+    }
+  };
+
+  // ---------- BOOT (wait for module globals, then run) ----------
+  async function waitForGlobals(timeoutMs = 8000){
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const hasInit = (typeof window.initializeCustomerData === "function");
+      const hasSupabase = !!window.supabase?.auth;
+      if (hasInit && hasSupabase) return true;
+      await new Promise(r => setTimeout(r, 150));
+    }
+    return false;
+  }
+
+  (async () => {
+    const okReady = await waitForGlobals();
+    if (!okReady){
+      showErr("Supabase/customer-data not ready. Hard refresh (Ctrl+Shift+R).");
+      supabasePill.textContent = "Supabase not loaded";
+      return;
+    }
+
+    await refreshAuthUI();
+
+    // Keep UI in sync if auth changes
     window.supabase.auth.onAuthStateChange(async () => {
       await refreshAuthUI();
       await loadCustomers();
     });
-  }
 
-  (async () => {
-    await refreshAuthUI();
     await loadCustomers();
   })();
 </script>
