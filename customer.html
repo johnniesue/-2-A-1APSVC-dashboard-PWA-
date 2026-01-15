@@ -1,11 +1,252 @@
 ﻿<!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Customer Detail</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>A-1APSVC • Customer Profile</title>
+
+  <style>
+    :root {
+      --bg:#0b1220;
+      --card:#111b2e;
+      --muted:#93a4c7;
+      --text:#e7eefc;
+      --accent:#4da3ff;
+      --danger:#ff5a6a;
+    }
+
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(135deg,#0b1220,#182a4a);
+      color:var(--text);
+    }
+
+    header{
+      position:sticky; top:0;
+      background:rgba(11,18,32,.9);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      padding:14px 16px;
+      z-index:10;
+    }
+
+    .wrap{ max-width:900px; margin:0 auto; padding:16px; }
+    h1{ margin:0 0 6px; font-size:22px; font-weight:800; }
+    p{ margin:0; color:var(--muted); }
+
+    .btn{
+      background:transparent;
+      border:1px solid rgba(255,255,255,.14);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:14px;
+      text-decoration:none;
+    }
+    .btn:hover{ border-color:rgba(255,255,255,.3); }
+    .btnPrimary{
+      background:rgba(77,163,255,.16);
+      border-color:rgba(77,163,255,.4);
+    }
+    .btnDanger{
+      background:rgba(255,90,106,.15);
+      border-color:rgba(255,90,106,.4);
+    }
+
+    .card{
+      background:rgba(17,27,46,.9);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:16px;
+      padding:16px;
+      margin-top:16px;
+    }
+
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .field{ flex:1; min-width:220px; }
+    label{ font-size:12px; color:var(--muted); display:block; margin-bottom:4px; }
+    input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+    }
+
+    .actions{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+
+    .error{
+      background:rgba(255,90,106,.12);
+      border:1px solid rgba(255,90,106,.35);
+      padding:12px;
+      border-radius:14px;
+      margin-top:16px;
+      display:none;
+    }
+
+    .ok{
+      background:rgba(77,163,255,.12);
+      border:1px solid rgba(77,163,255,.35);
+      padding:12px;
+      border-radius:14px;
+      margin-top:16px;
+      display:none;
+    }
+  </style>
 </head>
-<body style="font-family:system-ui">
-  <h1>customer.html exists ✅</h1>
-  <p>If you see this, GitHub Pages routing is fixed.</p>
+
+<body>
+
+<header>
+  <div class="wrap">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div>
+        <h1 id="title">Customer Profile</h1>
+        <p id="subtitle">Loading…</p>
+      </div>
+      <div class="row">
+        <a class="btn" href="./customers.html">← Back to Customers</a>
+        <a class="btn" href="./index.html">Dashboard</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="msgError" class="error"></div>
+  <div id="msgOk" class="ok"></div>
+
+  <div class="card">
+    <div class="row">
+      <div class="field">
+        <label>First Name</label>
+        <input id="first_name">
+      </div>
+      <div class="field">
+        <label>Last Name</label>
+        <input id="last_name">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Email</label>
+        <input id="email">
+      </div>
+      <div class="field">
+        <label>Mobile Phone</label>
+        <input id="mobile_phone">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Home Phone</label>
+        <input id="home_phone">
+      </div>
+      <div class="field">
+        <label>Work Phone</label>
+        <input id="work_phone">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Address</label>
+        <input id="address">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btnPrimary" id="btnSave">Save Changes</button>
+      <button class="btn btnDanger" id="btnDelete">Delete Customer</button>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="./customer-data.js"></script>
+
+<script>
+  const qs = new URLSearchParams(location.search);
+  const id = qs.get("id");
+
+  const err = msg => {
+    msgError.textContent = msg;
+    msgError.style.display = "block";
+  };
+
+  const ok = msg => {
+    msgOk.textContent = msg;
+    msgOk.style.display = "block";
+    setTimeout(()=>msgOk.style.display="none",2000);
+  };
+
+  if (!id) {
+    err("Missing customer id.");
+    throw new Error("Missing id");
+  }
+
+  let CURRENT = null;
+
+  async function loadCustomer(){
+    try{
+      const list = await initializeCustomerData();
+      CURRENT = list.find(c => c.id === id);
+
+      if (!CURRENT) {
+        err("Customer not found.");
+        return;
+      }
+
+      title.textContent = `${CURRENT.first_name} ${CURRENT.last_name}`;
+      subtitle.textContent = CURRENT.email || "";
+
+      first_name.value = CURRENT.first_name || "";
+      last_name.value = CURRENT.last_name || "";
+      email.value = CURRENT.email || "";
+      mobile_phone.value = CURRENT.mobile_phone || "";
+      home_phone.value = CURRENT.home_phone || "";
+      work_phone.value = CURRENT.work_phone || "";
+      address.value = CURRENT.address || "";
+
+    } catch(e){
+      err(e.message || "Failed to load customer.");
+    }
+  }
+
+  btnSave.onclick = async () => {
+    try{
+      const updated = await updateCustomerInSupabase(id,{
+        firstName:first_name.value,
+        lastName:last_name.value,
+        email:email.value,
+        mobilePhone:mobile_phone.value,
+        homePhone:home_phone.value,
+        workPhone:work_phone.value,
+        address:address.value
+      });
+
+      if (!updated) throw new Error("Update failed.");
+      ok("Saved");
+    } catch(e){
+      err(e.message || "Save failed.");
+    }
+  };
+
+  btnDelete.onclick = async () => {
+    if (!confirm("Delete this customer? This cannot be undone.")) return;
+    try{
+      await deleteCustomerInSupabase(id);
+      location.href = "./customers.html";
+    } catch(e){
+      err(e.message || "Delete failed.");
+    }
+  };
+
+  loadCustomer();
+</script>
+
 </body>
 </html>
