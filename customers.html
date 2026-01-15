@@ -26,9 +26,8 @@
 
     .wrap{ max-width:1100px; margin:0 auto; padding:16px;}
     .top{ display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
-    .brand{ display:flex; flex-direction:column; gap:2px;}
     .brand h1{ font-size:18px; margin:0; font-weight:800;}
-    .brand p{ margin:0; font-size:12px; color:var(--muted);}
+    .brand p{ margin:4px 0 0; font-size:12px; color:var(--muted);}
 
     .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
 
@@ -41,10 +40,9 @@
       cursor:pointer;
       font-size:14px;
       text-decoration:none;
-      white-space:nowrap;
+      user-select:none;
     }
     .btn:hover{ border-color:rgba(255,255,255,.28); }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; }
 
     .btnPrimary{
       background:rgba(77,163,255,.16);
@@ -61,10 +59,11 @@
       display:inline-flex;
       align-items:center;
       gap:8px;
+      white-space:nowrap;
     }
 
     .search{ flex:1; min-width:260px; }
-    input{
+    input[type="search"]{
       width:100%;
       padding:10px 12px;
       border-radius:12px;
@@ -72,11 +71,8 @@
       background:rgba(255,255,255,.06);
       color:var(--text);
       outline:none;
-      box-sizing:border-box;
     }
-    input::placeholder{ color:rgba(231,238,252,.55); }
-
-    .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+    input[type="search"]::placeholder{ color:rgba(231,238,252,.55); }
 
     .grid{
       display:grid;
@@ -100,22 +96,20 @@
     }
     .card:active{ transform: translateY(0px) scale(.995); }
 
-    .name{ font-weight:800; margin:0 0 8px; font-size:16px;}
-    .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35;}
-    .line strong{ color:var(--text); font-weight:650;}
+    .name{ font-weight:800; margin:0 0 6px; font-size:16px;}
+    .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35; }
+    .line strong{ color:var(--text); font-weight:650; }
 
     .error{
       background:rgba(255,90,106,.12);
       border:1px solid rgba(255,90,106,.35);
-      color:#ffd3d8;
       padding:12px;
       border-radius:14px;
       margin-top:12px;
       display:none;
+      color:#ffd3d8;
       white-space:pre-wrap;
     }
-
-    footer{ color:rgba(231,238,252,.55); font-size:12px; padding:12px 0 30px; }
   </style>
 </head>
 
@@ -134,17 +128,17 @@
           <input id="q" type="search" placeholder="Search name, phone, email, city, street..." />
         </div>
 
-        <button class="btn btnPrimary" id="btnAdd" type="button">+ Add</button>
+        <button class="btn btnPrimary" id="btnAdd">+ Add</button>
 
-        <button class="btn btnPrimary" id="btnLogin" type="button">Login</button>
-        <button class="btn" id="btnLogout" type="button" style="display:none;">Logout</button>
+        <button class="btn btnPrimary" id="btnLogin">Login</button>
+        <button class="btn" id="btnLogout" style="display:none;">Logout</button>
         <div class="pill" id="authPill" style="display:none;"></div>
 
         <a class="btn" href="./index.html">Dashboard</a>
       </div>
     </div>
 
-    <div class="stats">
+    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
       <div class="pill"><span id="count">0</span> customers loaded</div>
       <div class="pill"><span id="shown">0</span> shown</div>
     </div>
@@ -154,69 +148,57 @@
 <main class="wrap">
   <div id="msg" class="error"></div>
   <div id="grid" class="grid"></div>
-  <footer class="muted">
-    If customers don’t load, it usually means you’re not logged in or RLS is blocking reads.
-  </footer>
 </main>
 
-<!-- customer-data.js must set window.supabase + window.initializeCustomerData etc -->
-<script type="module" src="./customer-data.js"></script>
+<!-- ✅ IMPORTANT: run as a module and import the data layer BEFORE using it -->
+<script type="module">
+  import "./customer-data.js";
 
-<script>
+  const msgEl = document.getElementById("msg");
+  const grid = document.getElementById("grid");
+  const countEl = document.getElementById("count");
+  const shownEl = document.getElementById("shown");
+  const qEl = document.getElementById("q");
+
+  const btnLogin = document.getElementById("btnLogin");
+  const btnLogout = document.getElementById("btnLogout");
+  const authPill = document.getElementById("authPill");
+  const btnAdd = document.getElementById("btnAdd");
+
   let ALL = [];
-
-  const $ = (id) => document.getElementById(id);
-  const msg = $("msg");
-  const grid = $("grid");
-  const btnLogin = $("btnLogin");
-  const btnLogout = $("btnLogout");
-  const authPill = $("authPill");
-  const btnAdd = $("btnAdd");
 
   function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
 
-  // IMPORTANT: Your data is snake_case
-  function getName(c){
-    return `${c?.first_name || ""} ${c?.last_name || ""}`.trim() || "(No name)";
+  function showError(text){
+    msgEl.style.display = text ? "block" : "none";
+    msgEl.textContent = text || "";
   }
-  function getEmail(c){ return c?.email || ""; }
-  function getPhone(c){ return c?.mobile_phone || c?.home_phone || c?.work_phone || ""; }
-  function getAddress(c){ return c?.address || ""; }
 
   function customerSearchBlob(c){
     return [
-      c?.first_name, c?.last_name, c?.email,
-      c?.mobile_phone, c?.home_phone, c?.work_phone,
-      c?.address, c?.city, c?.state, c?.zip,
-      c?.company, c?.notes
+      c.first_name, c.last_name, c.email,
+      c.mobile_phone, c.home_phone, c.work_phone,
+      c.address, c.city, c.state, c.zip, c.company
     ].map(norm).join(" ");
   }
 
-  function setMsg(text){
-    msg.style.display = text ? "block" : "none";
-    msg.textContent = text || "";
-  }
-
   function render(list){
-    $("shown").textContent = list.length;
-    $("count").textContent = ALL.length;
+    shownEl.textContent = String(list.length);
+    countEl.textContent = String(ALL.length);
 
     if (!list.length){
-      grid.innerHTML = `<div class="card" style="cursor:default;">
-        <p class="name">No customers found.</p>
-        <p class="line">Try a different search.</p>
-      </div>`;
+      grid.innerHTML = `<div class="card" style="cursor:default;"><p class="line"><strong>No customers found.</strong></p><p class="line">Try a different search.</p></div>`;
       return;
     }
 
     grid.innerHTML = list.map(c => {
-      const name = getName(c);
-      const email = getEmail(c);
-      const phone = getPhone(c);
-      const addr = getAddress(c);
+      const name = `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || "(No name)";
+      const phone = c.mobile_phone || c.home_phone || c.work_phone || "";
+      const email = c.email || "";
+      const addr  = c.address || "";
 
       return `
-        <div class="card" data-id="${c.id}">
+        <div class="card" data-id="${String(c.id)}">
           <p class="name">${escapeHtml(name)}</p>
           <p class="line"><strong>Email:</strong> ${escapeHtml(email)}</p>
           <p class="line"><strong>Phone:</strong> ${escapeHtml(phone)}</p>
@@ -229,21 +211,20 @@
       const card = e.target.closest(".card");
       if (!card) return;
       const id = card.getAttribute("data-id");
-      location.href = `customer.html?id=${encodeURIComponent(id)}`;
+      location.href = `./customer.html?id=${encodeURIComponent(id)}`;
     };
   }
 
   function escapeHtml(str){
-    return String(str ?? "").replace(/[&<>"']/g, s => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[s]));
+    return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
   }
 
   async function refreshAuthUI(){
-    if (!window.supabase?.auth) return;
+    const supabase = window.supabase;
+    if (!supabase?.auth) return;
 
-    const { data } = await window.supabase.auth.getSession();
-    const email = data?.session?.user?.email || "";
+    const { data } = await supabase.auth.getSession();
+    const email = data?.session?.user?.email;
 
     btnLogin.style.display = email ? "none" : "inline-block";
     btnLogout.style.display = email ? "inline-block" : "none";
@@ -253,103 +234,91 @@
 
   async function loadCustomers(){
     try{
-      setMsg("");
+      showError("");
+
+      // ✅ now guaranteed available because we imported customer-data.js above
       ALL = await window.initializeCustomerData();
       render(ALL);
+
+      // sync counts
+      countEl.textContent = String(ALL.length);
+      shownEl.textContent = String(ALL.length);
     } catch (e){
       console.error(e);
+      showError("Not logged in or blocked by RLS.\n\nClick Login, then refresh.\n\n" + (e?.message || e));
       ALL = [];
       render([]);
-      setMsg("Not logged in or blocked by RLS.\n\nClick Login, then refresh this page.\n\n" + (e?.message || e));
     }
   }
 
-  $("q").addEventListener("input", (e) => {
+  // Search
+  qEl.addEventListener("input", (e) => {
     const q = norm(e.target.value);
     const filtered = !q ? ALL : ALL.filter(c => customerSearchBlob(c).includes(q));
     render(filtered);
   });
 
-  // ---------- AUTH ----------
-  btnLogin.onclick = async () => {
-    try{
-      const email = prompt("Enter your email for a magic login link:");
-      if (!email) return;
-
-      await window.supabase.auth.signInWithOtp({
-        email,
-        options:{ emailRedirectTo: location.href }
-      });
-
-      alert("Check your email for the login link, then come back here.");
-    } catch (e){
-      console.error(e);
-      setMsg("Login failed:\n\n" + (e?.message || e));
-    }
-  };
-
-  btnLogout.onclick = async () => {
-    try{
-      await window.supabase.auth.signOut();
-      await refreshAuthUI();
-      await loadCustomers();
-    } catch (e){
-      console.error(e);
-      setMsg("Logout failed:\n\n" + (e?.message || e));
-    }
-  };
-
-  // ---------- ADD ----------
+  // Add button (basic: prompt + create)
   btnAdd.onclick = async () => {
     try{
-      setMsg("");
-      // Require login
-      const { data } = await window.supabase.auth.getSession();
-      if (!data?.session) {
-        setMsg("Please Login first, then click + Add again.");
-        return;
-      }
+      const first = (prompt("First name:") || "").trim();
+      const last  = (prompt("Last name:") || "").trim();
+      if (!first && !last) return;
 
-      const first = prompt("First name:") || "";
-      const last = prompt("Last name:") || "";
-      const email = prompt("Email (optional):") || "";
-      const mobile = prompt("Mobile phone (optional):") || "";
-      const address = prompt("Address (optional):") || "";
+      const email = (prompt("Email (optional):") || "").trim();
+      const mobile = (prompt("Mobile phone (optional):") || "").trim();
+      const address = (prompt("Address (optional):") || "").trim();
 
       const created = await window.createCustomerInSupabase({
         firstName: first,
         lastName: last,
         email,
         mobilePhone: mobile,
-        address
+        address,
       });
 
-      if (!created?.id) throw new Error("Create did not return a customer id.");
-
-      // reload list so it appears immediately
-      await loadCustomers();
-
-      // open detail page
-      location.href = `customer.html?id=${encodeURIComponent(created.id)}`;
+      if (!created) throw new Error("Create did not return a customer.");
+      ALL = [created, ...ALL];
+      qEl.value = "";
+      render(ALL);
     } catch (e){
       console.error(e);
-      setMsg("Add failed:\n\n" + (e?.message || e));
+      alert("Add failed.\n\n" + (e?.message || e));
     }
   };
 
-  // Keep UI in sync if session changes
-  if (window.supabase?.auth?.onAuthStateChange) {
-    window.supabase.auth.onAuthStateChange(async () => {
-      await refreshAuthUI();
-      await loadCustomers();
-    });
-  }
+  // Login/logout
+  btnLogin.onclick = async () => {
+    const supabase = window.supabase;
+    if (!supabase?.auth) return alert("Supabase client not ready.");
 
-  // Boot
-  (async () => {
+    const email = prompt("Enter your email:");
+    if (!email) return;
+
+    await supabase.auth.signInWithOtp({
+      email,
+      options:{ emailRedirectTo: location.href }
+    });
+
+    alert("Check your email for the login link.");
+  };
+
+  btnLogout.onclick = async () => {
+    const supabase = window.supabase;
+    await supabase.auth.signOut();
     await refreshAuthUI();
     await loadCustomers();
-  })();
+  };
+
+  // Auth change
+  window.supabase?.auth?.onAuthStateChange(async () => {
+    await refreshAuthUI();
+    await loadCustomers();
+  });
+
+  // Boot
+  await refreshAuthUI();
+  await loadCustomers();
 </script>
 
 </body>
