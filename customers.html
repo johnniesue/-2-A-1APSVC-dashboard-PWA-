@@ -6,7 +6,14 @@
   <title>A-1APSVC • Customers</title>
 
   <style>
-    :root { --bg:#0b1220; --card:#111b2e; --muted:#93a4c7; --text:#e7eefc; --accent:#4da3ff; --danger:#ff5a6a; }
+    :root {
+      --bg:#0b1220;
+      --card:#111b2e;
+      --muted:#93a4c7;
+      --text:#e7eefc;
+      --accent:#4da3ff;
+      --danger:#ff5a6a;
+    }
 
     body{
       margin:0;
@@ -16,7 +23,8 @@
     }
 
     header{
-      position:sticky; top:0;
+      position:sticky;
+      top:0;
       background:rgba(11,18,32,.9);
       backdrop-filter: blur(10px);
       border-bottom:1px solid rgba(255,255,255,.08);
@@ -39,6 +47,7 @@
       border-radius:12px;
       cursor:pointer;
       font-size:14px;
+      text-decoration:none;
     }
     .btn:hover{ border-color:rgba(255,255,255,.28); }
 
@@ -80,6 +89,12 @@
       padding:14px;
       box-shadow:0 10px 30px rgba(0,0,0,.25);
       cursor:pointer;
+      transition:transform .08s ease, border-color .08s ease;
+    }
+
+    .card:hover{
+      transform:translateY(-1px);
+      border-color:rgba(77,163,255,.35);
     }
 
     .name{ font-weight:800; margin:0 0 6px; font-size:16px;}
@@ -130,48 +145,58 @@
   <div id="grid" class="grid"></div>
 </main>
 
+<!-- ✅ MUST be module -->
 <script type="module" src="./customer-data.js"></script>
 
 <script>
   let ALL = [];
 
-  function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
+  function norm(v){
+    return (v ?? "").toString().toLowerCase().trim();
+  }
 
   function render(list){
     const grid = document.getElementById("grid");
     document.getElementById("count").textContent = list.length;
 
     if (!list.length){
-      grid.innerHTML = `<div class="card"><p class="line">No customers.</p></div>`;
+      grid.innerHTML =
+        `<div class="card"><p class="line">No customers found.</p></div>`;
       return;
     }
 
-    grid.innerHTML = list.map(c => `
-      <div class="card" onclick="location.href='customer.html?id=${c.id}'">
-        <p class="name">${(c.firstName||"") + " " + (c.lastName||"")}</p>
-        <p class="line">${c.email||""}</p>
-        <p class="line">${c.mobilePhone||""}</p>
-      </div>
-    `).join("");
+    grid.innerHTML = list.map(c => {
+      const name = `${c.first_name || ""} ${c.last_name || ""}`.trim();
+      return `
+        <div class="card" onclick="location.href='customer.html?id=${c.id}'">
+          <p class="name">${name || "(No name)"}</p>
+          <p class="line">${c.email || ""}</p>
+          <p class="line">${c.mobile_phone || ""}</p>
+        </div>
+      `;
+    }).join("");
   }
 
   async function loadCustomers(){
     try{
-      document.getElementById("msg").style.display = "none";
+      msg.style.display = "none";
       ALL = await initializeCustomerData();
       render(ALL);
-    } catch (e){
-      document.getElementById("msg").textContent =
-        "Not logged in. Click Login to view customers.";
-      document.getElementById("msg").style.display = "block";
+    } catch {
+      msg.textContent = "Not logged in. Click Login to view customers.";
+      msg.style.display = "block";
     }
   }
 
-  document.getElementById("q").addEventListener("input", e => {
-    const q = norm(e.target.value);
-    render(!q ? ALL : ALL.filter(c =>
-      `${c.firstName} ${c.lastName} ${c.email} ${c.mobilePhone}`.toLowerCase().includes(q)
-    ));
+  q.addEventListener("input", e => {
+    const v = norm(e.target.value);
+    render(
+      !v ? ALL : ALL.filter(c =>
+        `${c.first_name} ${c.last_name} ${c.email} ${c.mobile_phone}`
+          .toLowerCase()
+          .includes(v)
+      )
+    );
   });
 
   // ---------- AUTH ----------
