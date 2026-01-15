@@ -3,13 +3,11 @@
  * Source of truth: Supabase (public.customers)
  * Cache: localStorage (a1apsvc-customers)
  *
- * Works on GitHub Pages:
- * - Uses Supabase JS auth client for Login (magic link)
- * - Reads token from either:
- *   1) Supabase JS auth storage (preferred)
- *   2) legacy sb-<projectref>-auth-token (fallback)
+ * GitHub Pages compatible:
+ * - Supabase JS auth client (magic link login)
+ * - REST fetch uses Bearer access token
  *
- * UI expects snake_case: first_name, last_name, mobile_phone, etc.
+ * UI expects snake_case keys.
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -18,32 +16,24 @@ const SUPABASE_URL = "https://zzigzylypifjokskehkn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_ei0eWX62jrS8MMq7odV4iQ_IW-9yqG6";
 const PROJECT_REF = "zzigzylypifjokskehkn";
 
-// Cache keys
 const CACHE_KEY = "a1apsvc-customers";
 const CACHE_TIME_KEY = "a1apsvc-customers-cache-time";
 
-// ✅ Create client and expose globally so customers.html can call supabase.auth.*
+// Create client and expose globally
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.supabase = supabase;
 
-/**
- * Pull access token from:
- * 1) Supabase JS auth session (preferred)
- * 2) Legacy storage key sb-<projectref>-auth-token (fallback)
- */
 async function getSupabaseAccessToken() {
-  // 1) Supabase Auth (GitHub Pages login)
+  // Preferred: Supabase JS auth session (GitHub Pages login)
   try {
     const { data, error } = await supabase.auth.getSession();
     if (!error) {
       const token = data?.session?.access_token;
       if (token) return token;
     }
-  } catch {
-    // ignore
-  }
+  } catch {}
 
-  // 2) Legacy storage (old dashboard login)
+  // Fallback: legacy key if you ever used it
   const legacyKey = `sb-${PROJECT_REF}-auth-token`;
   const raw = localStorage.getItem(legacyKey);
   if (!raw) return null;
@@ -68,7 +58,6 @@ function buildAddress(r) {
     r.street2,
     [r.city, r.state, r.zip].filter(Boolean).join(" "),
   ].filter(Boolean);
-
   return parts.join(", ");
 }
 
@@ -90,10 +79,13 @@ function mapRowToUI(r) {
     state: r.state ?? "",
     zip: r.zip ?? "",
 
-    tags: r.tags ?? [],
-    notes: r.notes ?? "",
+    // IMPORTANT:
+    // Your table does NOT have tags/notes right now.
+    // We provide safe defaults so the UI won't crash later.
+    tags: [],
+    notes: "",
 
-    created_at: r.created_at ?? new Date().toISOString(),
+    created_at: r.created_at ?? null,
     updated_at: r.updated_at ?? null,
   };
 }
@@ -127,15 +119,9 @@ async function supabaseFetchJson(url, method = "GET", body = null) {
 }
 
 /**
- * Load customers from Supabase, with a 6-hour local cache fallback.
+ * Load customers from Supabase, with a 6-hour cache fallback.
  */
 async function initializeCustomerData() {
-  // migrate legacy key if it exists
-  const legacy = localStorage.getItem("a1apsvc_customers");
-  if (legacy && !localStorage.getItem(CACHE_KEY)) {
-    localStorage.setItem(CACHE_KEY, legacy);
-  }
-
   const cached = localStorage.getItem(CACHE_KEY);
   const cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || "0", 10);
   const maxAgeMs = 6 * 60 * 60 * 1000;
@@ -146,9 +132,10 @@ async function initializeCustomerData() {
     } catch {}
   }
 
+  // ✅ Removed tags, notes from select list (they do not exist in your table)
   const url =
     `${SUPABASE_URL}/rest/v1/customers` +
-    `?select=id,first_name,last_name,company,email,mobile_phone,home_phone,work_phone,street1,street2,city,state,zip,created_at,updated_at,tags,notes` +
+    `?select=id,first_name,last_name,company,email,mobile_phone,home_phone,work_phone,street1,street2,city,state,zip,created_at,updated_at` +
     `&order=created_at.desc` +
     `&limit=5000`;
 
@@ -175,9 +162,6 @@ async function createCustomerInSupabase(c) {
     city: (c.city ?? "").trim() || null,
     state: (c.state ?? "").trim() || null,
     zip: (c.zip ?? "").trim() || null,
-
-    tags: c.tags ?? null,
-    notes: c.notes ?? null,
   };
 
   const url = `${SUPABASE_URL}/rest/v1/customers`;
@@ -194,7 +178,7 @@ async function updateCustomerInSupabase(id, c) {
     home_phone: c.homePhone || null,
     work_phone: c.workPhone || null,
     company: c.company || null,
-    street1: (c.address || "").trim() || null
+    street1: (c.address || "").trim() || null,
   };
 
   const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(id)}`;
@@ -208,7 +192,7 @@ async function deleteCustomerInSupabase(id) {
   return true;
 }
 
-// Export functions globally for customers.html / customer.html
+// Expose functions globally for pages
 window.initializeCustomerData = initializeCustomerData;
 window.createCustomerInSupabase = createCustomerInSupabase;
 window.updateCustomerInSupabase = updateCustomerInSupabase;
