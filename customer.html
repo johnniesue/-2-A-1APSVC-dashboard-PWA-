@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -6,7 +6,7 @@
   <title>A-1APSVC • Customer Profile</title>
 
   <style>
-    :root {
+    :root{
       --bg:#0b1220;
       --card:#111b2e;
       --muted:#93a4c7;
@@ -23,7 +23,8 @@
     }
 
     header{
-      position:sticky; top:0;
+      position:sticky;
+      top:0;
       background:rgba(11,18,32,.9);
       backdrop-filter: blur(10px);
       border-bottom:1px solid rgba(255,255,255,.08);
@@ -32,6 +33,7 @@
     }
 
     .wrap{ max-width:900px; margin:0 auto; padding:16px; }
+
     h1{ margin:0 0 6px; font-size:22px; font-weight:800; }
     p{ margin:0; color:var(--muted); }
 
@@ -44,38 +46,71 @@
       cursor:pointer;
       font-size:14px;
       text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
     }
-    .btn:hover{ border-color:rgba(255,255,255,.3); }
+    .btn:hover{ border-color:rgba(255,255,255,.30); }
+
     .btnPrimary{
       background:rgba(77,163,255,.16);
-      border-color:rgba(77,163,255,.4);
+      border-color:rgba(77,163,255,.40);
     }
     .btnDanger{
       background:rgba(255,90,106,.15);
-      border-color:rgba(255,90,106,.4);
+      border-color:rgba(255,90,106,.40);
     }
 
     .card{
       background:rgba(17,27,46,.9);
-      border:1px solid rgba(255,255,255,.1);
+      border:1px solid rgba(255,255,255,.10);
       border-radius:16px;
-      padding:16px;
+      padding:18px;
       margin-top:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
     }
 
-    .row{ display:flex; gap:12px; flex-wrap:wrap; }
-    .field{ flex:1; min-width:220px; }
-    label{ font-size:12px; color:var(--muted); display:block; margin-bottom:4px; }
+    /* ✅ FIXED LAYOUT: clean spacing, no overlaps */
+    .form-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+      margin-top:10px;
+    }
+    .full{ grid-column: 1 / -1; }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:0;
+    }
+
+    label{
+      font-size:12px;
+      color:var(--muted);
+      display:block;
+    }
+
     input{
       width:100%;
+      height:44px;
       padding:10px 12px;
       border-radius:12px;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.06);
       color:var(--text);
+      box-sizing:border-box;
+      outline:none;
     }
 
-    .actions{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+    .actions{
+      display:flex;
+      gap:10px;
+      margin-top:18px;
+      flex-wrap:wrap;
+    }
 
     .error{
       background:rgba(255,90,106,.12);
@@ -94,6 +129,10 @@
       margin-top:16px;
       display:none;
     }
+
+    @media (max-width: 720px){
+      .form-grid{ grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 
@@ -106,7 +145,7 @@
         <h1 id="title">Customer Profile</h1>
         <p id="subtitle">Loading…</p>
       </div>
-      <div class="row">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <a class="btn" href="./customers.html">← Back to Customers</a>
         <a class="btn" href="./index.html">Dashboard</a>
       </div>
@@ -119,72 +158,90 @@
   <div id="msgOk" class="ok"></div>
 
   <div class="card">
-    <div class="row">
+    <div class="form-grid">
       <div class="field">
-        <label>First Name</label>
-        <input id="first_name">
+        <label for="first_name">First Name</label>
+        <input id="first_name" autocomplete="given-name">
       </div>
-      <div class="field">
-        <label>Last Name</label>
-        <input id="last_name">
-      </div>
-    </div>
 
-    <div class="row">
       <div class="field">
-        <label>Email</label>
-        <input id="email">
+        <label for="last_name">Last Name</label>
+        <input id="last_name" autocomplete="family-name">
       </div>
-      <div class="field">
-        <label>Mobile Phone</label>
-        <input id="mobile_phone">
-      </div>
-    </div>
 
-    <div class="row">
       <div class="field">
-        <label>Home Phone</label>
-        <input id="home_phone">
+        <label for="email">Email</label>
+        <input id="email" autocomplete="email">
       </div>
-      <div class="field">
-        <label>Work Phone</label>
-        <input id="work_phone">
-      </div>
-    </div>
 
-    <div class="row">
       <div class="field">
-        <label>Address</label>
-        <input id="address">
+        <label for="mobile_phone">Mobile Phone</label>
+        <input id="mobile_phone" autocomplete="tel">
+      </div>
+
+      <div class="field">
+        <label for="home_phone">Home Phone</label>
+        <input id="home_phone" autocomplete="tel">
+      </div>
+
+      <div class="field">
+        <label for="work_phone">Work Phone</label>
+        <input id="work_phone" autocomplete="tel">
+      </div>
+
+      <div class="field full">
+        <label for="address">Address</label>
+        <input id="address" placeholder="Street, City, State ZIP">
       </div>
     </div>
 
     <div class="actions">
-      <button class="btn btnPrimary" id="btnSave">Save Changes</button>
-      <button class="btn btnDanger" id="btnDelete">Delete Customer</button>
+      <button class="btn btnPrimary" id="btnSave" type="button">Save Changes</button>
+      <button class="btn btnDanger" id="btnDelete" type="button">Delete Customer</button>
     </div>
   </div>
 </main>
 
+<!-- ✅ IMPORTANT: loads functions into window.* -->
 <script type="module" src="./customer-data.js"></script>
 
 <script>
+  const $ = (id) => document.getElementById(id);
+
   const qs = new URLSearchParams(location.search);
   const id = qs.get("id");
 
-  const err = msg => {
+  const msgError = $("msgError");
+  const msgOk = $("msgOk");
+  const title = $("title");
+  const subtitle = $("subtitle");
+
+  const first_name = $("first_name");
+  const last_name = $("last_name");
+  const email = $("email");
+  const mobile_phone = $("mobile_phone");
+  const home_phone = $("home_phone");
+  const work_phone = $("work_phone");
+  const address = $("address");
+
+  const btnSave = $("btnSave");
+  const btnDelete = $("btnDelete");
+
+  function showError(msg){
+    msgOk.style.display = "none";
     msgError.textContent = msg;
     msgError.style.display = "block";
-  };
+  }
 
-  const ok = msg => {
+  function showOk(msg){
+    msgError.style.display = "none";
     msgOk.textContent = msg;
     msgOk.style.display = "block";
-    setTimeout(()=>msgOk.style.display="none",2000);
-  };
+    setTimeout(() => { msgOk.style.display = "none"; }, 1800);
+  }
 
-  if (!id) {
-    err("Missing customer id.");
+  if (!id){
+    showError("Missing customer id.");
     throw new Error("Missing id");
   }
 
@@ -192,15 +249,20 @@
 
   async function loadCustomer(){
     try{
-      const list = await initializeCustomerData();
-      CURRENT = list.find(c => c.id === id);
+      // wait until module loads window.initializeCustomerData
+      if (typeof window.initializeCustomerData !== "function") {
+        throw new Error("customer-data.js did not load (initializeCustomerData missing).");
+      }
 
-      if (!CURRENT) {
-        err("Customer not found.");
+      const list = await window.initializeCustomerData();
+      CURRENT = (list || []).find(c => String(c.id) === String(id));
+
+      if (!CURRENT){
+        showError("Customer not found.");
         return;
       }
 
-      title.textContent = `${CURRENT.first_name} ${CURRENT.last_name}`;
+      title.textContent = `${CURRENT.first_name || ""} ${CURRENT.last_name || ""}`.trim() || "Customer Profile";
       subtitle.textContent = CURRENT.email || "";
 
       first_name.value = CURRENT.first_name || "";
@@ -212,38 +274,56 @@
       address.value = CURRENT.address || "";
 
     } catch(e){
-      err(e.message || "Failed to load customer.");
+      console.error(e);
+      showError(e?.message || "Failed to load customer.");
     }
   }
 
-  btnSave.onclick = async () => {
+  btnSave.addEventListener("click", async () => {
     try{
-      const updated = await updateCustomerInSupabase(id,{
-        firstName:first_name.value,
-        lastName:last_name.value,
-        email:email.value,
-        mobilePhone:mobile_phone.value,
-        homePhone:home_phone.value,
-        workPhone:work_phone.value,
-        address:address.value
+      if (typeof window.updateCustomerInSupabase !== "function") {
+        throw new Error("updateCustomerInSupabase missing. customer-data.js not loaded.");
+      }
+
+      const updated = await window.updateCustomerInSupabase(id, {
+        firstName: first_name.value,
+        lastName: last_name.value,
+        email: email.value,
+        mobilePhone: mobile_phone.value,
+        homePhone: home_phone.value,
+        workPhone: work_phone.value,
+        address: address.value
       });
 
       if (!updated) throw new Error("Update failed.");
-      ok("Saved");
-    } catch(e){
-      err(e.message || "Save failed.");
-    }
-  };
 
-  btnDelete.onclick = async () => {
+      // refresh header + local state
+      CURRENT = updated;
+      title.textContent = `${updated.first_name || ""} ${updated.last_name || ""}`.trim() || "Customer Profile";
+      subtitle.textContent = updated.email || "";
+
+      showOk("Saved");
+    } catch(e){
+      console.error(e);
+      showError(e?.message || "Save failed.");
+    }
+  });
+
+  btnDelete.addEventListener("click", async () => {
     if (!confirm("Delete this customer? This cannot be undone.")) return;
+
     try{
-      await deleteCustomerInSupabase(id);
+      if (typeof window.deleteCustomerInSupabase !== "function") {
+        throw new Error("deleteCustomerInSupabase missing. customer-data.js not loaded.");
+      }
+
+      await window.deleteCustomerInSupabase(id);
       location.href = "./customers.html";
     } catch(e){
-      err(e.message || "Delete failed.");
+      console.error(e);
+      showError(e?.message || "Delete failed.");
     }
-  };
+  });
 
   loadCustomer();
 </script>
