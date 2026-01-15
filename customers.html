@@ -6,14 +6,7 @@
   <title>A-1APSVC • Customers</title>
 
   <style>
-    :root{
-      --bg:#0b1220;
-      --card:#111b2e;
-      --muted:#93a4c7;
-      --text:#e7eefc;
-      --accent:#4da3ff;
-      --danger:#ff5a6a;
-    }
+    :root { --bg:#0b1220; --card:#111b2e; --muted:#93a4c7; --text:#e7eefc; --accent:#4da3ff; --danger:#ff5a6a; }
 
     body{
       margin:0;
@@ -33,11 +26,11 @@
 
     .wrap{ max-width:1100px; margin:0 auto; padding:16px;}
     .top{ display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
-    .brand{ display:flex; flex-direction:column; gap:2px;}
     .brand h1{ font-size:18px; margin:0; font-weight:800;}
-    .brand p{ margin:0; font-size:12px; color:var(--muted);}
+    .brand p{ margin:4px 0 0; font-size:12px; color:var(--muted);}
 
-    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
     .btn{
       background:transparent;
       border:1px solid rgba(255,255,255,.14);
@@ -47,10 +40,11 @@
       cursor:pointer;
       font-size:14px;
       text-decoration:none;
-      white-space:nowrap;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
     }
     .btn:hover{ border-color:rgba(255,255,255,.28); }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; }
 
     .btnPrimary{
       background:rgba(77,163,255,.16);
@@ -71,10 +65,11 @@
       display:inline-flex;
       align-items:center;
       gap:8px;
+      white-space:nowrap;
     }
 
     .search{ flex:1; min-width:260px; }
-    input, textarea{
+    input{
       width:100%;
       padding:10px 12px;
       border-radius:12px;
@@ -84,9 +79,7 @@
       outline:none;
       box-sizing:border-box;
     }
-    input::placeholder, textarea::placeholder{ color:rgba(231,238,252,.55); }
-
-    .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    input::placeholder{ color:rgba(231,238,252,.55); }
 
     .grid{
       display:grid;
@@ -104,10 +97,9 @@
       cursor:pointer;
       transition: transform .08s ease, border-color .08s ease;
     }
-    .card:hover{
-      transform: translateY(-1px);
-      border-color: rgba(77,163,255,.35);
-    }
+    .card:hover{ transform: translateY(-1px); border-color: rgba(77,163,255,.35); }
+    .card:active{ transform: translateY(0px) scale(.995); }
+
     .name{ font-weight:800; margin:0 0 6px; font-size:16px;}
     .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35;}
     .line strong{ color:var(--text); font-weight:650; }
@@ -131,55 +123,62 @@
       color:#d7ecff;
     }
 
-    /* ---------- Modal (Add Customer) ---------- */
+    /* ---------- Modal ---------- */
     .overlay{
       position:fixed;
       inset:0;
       background:rgba(0,0,0,.55);
       display:none;
-      z-index:100;
+      z-index:50;
     }
     .modal{
       position:fixed;
       top:50%;
       left:50%;
       transform:translate(-50%,-50%);
-      width:min(700px, 92vw);
+      width:min(760px, 92vw);
       background:rgba(11,18,32,.98);
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.12);
       border-radius:18px;
-      box-shadow:0 30px 90px rgba(0,0,0,.6);
+      box-shadow:0 30px 80px rgba(0,0,0,.55);
       display:none;
-      z-index:110;
+      z-index:60;
     }
     .modalHeader{
       padding:14px 16px;
       border-bottom:1px solid rgba(255,255,255,.10);
       display:flex;
+      align-items:center;
       justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
+      gap:12px;
     }
-    .modalHeader h2{ margin:0; font-size:16px; font-weight:800; }
-    .modalHeader p{ margin:4px 0 0; font-size:12px; color:var(--muted); }
-
+    .modalHeader h2{ margin:0; font-size:16px; font-weight:850; }
     .modalBody{ padding:16px; }
+
     .formGrid{
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap:12px;
     }
-    .full{ grid-column:1 / -1; }
+    .full{ grid-column: 1 / -1; }
     .field label{
       display:block;
       font-size:12px;
       color:var(--muted);
       margin:0 0 6px;
     }
-
+    .field input{
+      width:100%;
+      box-sizing:border-box;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      outline:none;
+    }
     .modalActions{
-      padding:14px 16px;
-      border-top:1px solid rgba(255,255,255,.10);
+      margin-top:14px;
       display:flex;
       gap:10px;
       justify-content:flex-end;
@@ -206,159 +205,134 @@
         <button class="btn" id="btnLogout" type="button" style="display:none;">Logout</button>
         <div class="pill" id="authPill" style="display:none;"></div>
 
-        <button class="btn btnPrimary" id="btnAdd" type="button" disabled>+ Add Customer</button>
+        <button class="btn btnPrimary" id="btnAdd" type="button">+ Add Customer</button>
 
         <a class="btn" href="./index.html">Dashboard</a>
       </div>
     </div>
 
-    <div class="stats">
+    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
       <div class="pill"><span id="count">0</span> customers loaded</div>
       <div class="pill"><span id="shown">0</span> shown</div>
-      <div class="pill">Source: <span style="color:rgba(231,238,252,.75)">Supabase public.customers</span></div>
     </div>
+
+    <div id="msgOk" class="ok"></div>
+    <div id="msg" class="error"></div>
   </div>
 </header>
 
 <main class="wrap">
-  <div id="msgError" class="error"></div>
-  <div id="msgOk" class="ok"></div>
   <div id="grid" class="grid"></div>
 </main>
 
+<!-- Modal -->
 <div id="overlay" class="overlay"></div>
-
 <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
   <div class="modalHeader">
-    <div>
-      <h2>Add Customer</h2>
-      <p>Create a new customer in Supabase</p>
-    </div>
+    <h2>Add Customer</h2>
     <button class="btn" id="btnCloseModal" type="button">Close</button>
   </div>
-
   <div class="modalBody">
     <div class="formGrid">
       <div class="field">
         <label>First name</label>
-        <input id="add_first" type="text" placeholder="John" />
+        <input id="f_first" type="text" />
       </div>
       <div class="field">
         <label>Last name</label>
-        <input id="add_last" type="text" placeholder="Doe" />
+        <input id="f_last" type="text" />
       </div>
 
       <div class="field full">
         <label>Email</label>
-        <input id="add_email" type="email" placeholder="john@email.com" />
+        <input id="f_email" type="email" />
       </div>
 
       <div class="field">
-        <label>Mobile phone</label>
-        <input id="add_mobile" type="text" placeholder="(555) 555-5555" />
+        <label>Mobile</label>
+        <input id="f_mobile" type="text" />
       </div>
       <div class="field">
-        <label>Home phone</label>
-        <input id="add_home" type="text" placeholder="" />
+        <label>Home</label>
+        <input id="f_home" type="text" />
       </div>
 
       <div class="field full">
-        <label>Work phone</label>
-        <input id="add_work" type="text" placeholder="" />
+        <label>Work</label>
+        <input id="f_work" type="text" />
       </div>
 
       <div class="field full">
         <label>Company</label>
-        <input id="add_company" type="text" placeholder="" />
+        <input id="f_company" type="text" />
       </div>
 
       <div class="field full">
         <label>Address (single line)</label>
-        <input id="add_address" type="text" placeholder="123 Main St, Houston TX 77001" />
-      </div>
-
-      <div class="field full">
-        <label>Notes</label>
-        <textarea id="add_notes" rows="3" placeholder="Optional notes…"></textarea>
+        <input id="f_address" type="text" placeholder="123 Main St, City ST 12345" />
       </div>
     </div>
-  </div>
 
-  <div class="modalActions">
-    <button class="btn" id="btnCancelAdd" type="button">Cancel</button>
-    <button class="btn btnPrimary" id="btnCreate" type="button">Create</button>
+    <div class="modalActions">
+      <button class="btn" id="btnCancel" type="button">Cancel</button>
+      <button class="btn btnPrimary" id="btnCreate" type="button">Create</button>
+    </div>
   </div>
 </div>
 
-<!-- ✅ IMPORTANT: Use one module script so customer-data loads BEFORE we run page logic -->
-<script type="module">
-  import "./customer-data.js";
+<!-- MUST load customer-data.js first -->
+<script type="module" src="./customer-data.js"></script>
 
-  // ---------- helpers ----------
+<script>
+  let ALL = [];
   const $ = (id) => document.getElementById(id);
-
-  const msgError = $("msgError");
-  const msgOk = $("msgOk");
-  const grid = $("grid");
-
-  function showErr(text){
-    msgError.textContent = text || "";
-    msgError.style.display = text ? "block" : "none";
-  }
-  function showOk(text){
-    msgOk.textContent = text || "";
-    msgOk.style.display = text ? "block" : "none";
-    if (text) setTimeout(() => (msgOk.style.display = "none"), 1800);
-  }
 
   function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
 
-  function getFirst(c){ return c?.first_name ?? c?.firstName ?? ""; }
-  function getLast(c){ return c?.last_name ?? c?.lastName ?? ""; }
-  function getEmail(c){ return c?.email ?? ""; }
-  function getMobile(c){ return c?.mobile_phone ?? c?.mobilePhone ?? ""; }
-  function getHome(c){ return c?.home_phone ?? c?.homePhone ?? ""; }
-  function getWork(c){ return c?.work_phone ?? c?.workPhone ?? ""; }
-  function getCompany(c){ return c?.company ?? ""; }
-  function getAddress(c){ return c?.address ?? ""; }
-
-  function escapeHtml(str){
-    return String(str ?? "").replace(/[&<>"']/g, s => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[s]));
+  function showError(msg){
+    const el = $("msg");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+  function showOk(msg){
+    const el = $("msgOk");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+    if (msg) setTimeout(()=>{ el.style.display="none"; }, 1800);
   }
 
-  function customerSearchBlob(c){
+  function fullName(c){
+    return `${c.first_name||""} ${c.last_name||""}`.trim() || "(No name)";
+  }
+
+  function searchBlob(c){
     return [
-      getFirst(c), getLast(c), getEmail(c),
-      getMobile(c), getHome(c), getWork(c),
-      getCompany(c), getAddress(c),
-      c?.city, c?.state, c?.zip,
-      c?.notes
+      c.first_name, c.last_name, c.email,
+      c.mobile_phone, c.home_phone, c.work_phone,
+      c.address, c.city, c.state, c.zip,
+      c.company, c.notes
     ].map(norm).join(" ");
   }
 
-  // ---------- state ----------
-  let ALL = [];
+  function escapeHtml(str){
+    return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
 
-  // ---------- render ----------
   function render(list){
-    $("shown").textContent = String(list.length);
-    $("count").textContent = String(ALL.length);
+    const grid = $("grid");
+    $("shown").textContent = list.length;
 
     if (!list.length){
-      grid.innerHTML = `<div class="card" style="cursor:default;">
-        <p class="line"><strong>No customers found.</strong></p>
-        <p class="line">Try a different search.</p>
-      </div>`;
+      grid.innerHTML = `<div class="card" style="cursor:default;"><p class="line"><strong>No customers found.</strong></p><p class="line">Try a different search.</p></div>`;
       return;
     }
 
     grid.innerHTML = list.map(c => {
-      const name = `${getFirst(c)} ${getLast(c)}`.trim() || "(No name)";
-      const phone = getMobile(c) || getHome(c) || getWork(c) || "";
-      const addr = getAddress(c) || "";
-      const email = getEmail(c) || "";
+      const name = fullName(c);
+      const phone = c.mobile_phone || c.home_phone || c.work_phone || "";
+      const email = c.email || "";
+      const addr = c.address || "";
+
       return `
         <div class="card" data-id="${escapeHtml(c.id)}">
           <p class="name">${escapeHtml(name)}</p>
@@ -373,53 +347,129 @@
       const card = e.target.closest(".card");
       if (!card) return;
       const id = card.getAttribute("data-id");
+      if (!id) return;
       location.href = `customer.html?id=${encodeURIComponent(id)}`;
     };
   }
 
-  // ---------- load ----------
   async function loadCustomers(){
+    showError("");
+
+    if (typeof window.initializeCustomerData !== "function") {
+      showError("customer-data.js did not load yet. Hard refresh (Ctrl+Shift+R).");
+      return;
+    }
+
     try{
-      showErr("");
-      // these are attached to window by customer-data.js
       ALL = await window.initializeCustomerData();
-      render(ALL);
+      $("count").textContent = ALL.length;
+
+      const q = norm($("q").value);
+      const filtered = !q ? ALL : ALL.filter(c => searchBlob(c).includes(q));
+      render(filtered);
     } catch (e){
       console.error(e);
-      ALL = [];
+      showError("Not logged in or blocked by RLS. Click Login to view customers.");
       render([]);
-      showErr("Not logged in. Click Login to view customers.");
     }
   }
 
-  // ---------- auth UI ----------
-  async function refreshAuthUI(){
-    try{
-      const { data } = await window.supabase.auth.getSession();
-      const email = data?.session?.user?.email;
+  $("q").addEventListener("input", () => {
+    const q = norm($("q").value);
+    const filtered = !q ? ALL : ALL.filter(c => searchBlob(c).includes(q));
+    render(filtered);
+  });
 
-      $("btnLogin").style.display = email ? "none" : "inline-block";
-      $("btnLogout").style.display = email ? "inline-block" : "none";
-      $("authPill").style.display = email ? "inline-flex" : "none";
-      $("authPill").textContent = email ? `Logged in: ${email}` : "";
-      $("btnAdd").disabled = !email;
+  // ----- Modal -----
+  function openModal(){
+    $("overlay").style.display = "block";
+    $("modal").style.display = "block";
+    $("modal").setAttribute("aria-hidden","false");
+  }
+  function closeModal(){
+    $("overlay").style.display = "none";
+    $("modal").style.display = "none";
+    $("modal").setAttribute("aria-hidden","true");
+  }
+
+  $("btnAdd").onclick = () => {
+    openModal();
+    $("f_first").focus();
+  };
+  $("btnCloseModal").onclick = closeModal;
+  $("btnCancel").onclick = closeModal;
+  $("overlay").onclick = closeModal;
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+  $("btnCreate").onclick = async () => {
+    try{
+      if (typeof window.createCustomerInSupabase !== "function") {
+        throw new Error("createCustomerInSupabase is missing (customer-data.js not loaded).");
+      }
+
+      const payload = {
+        firstName: $("f_first").value.trim(),
+        lastName: $("f_last").value.trim(),
+        email: $("f_email").value.trim(),
+        mobilePhone: $("f_mobile").value.trim(),
+        homePhone: $("f_home").value.trim(),
+        workPhone: $("f_work").value.trim(),
+        company: $("f_company").value.trim(),
+        address: $("f_address").value.trim(),
+      };
+
+      const created = await window.createCustomerInSupabase(payload);
+      if (!created) throw new Error("Create did not return a customer.");
+
+      closeModal();
+      showOk("Customer added");
+
+      await loadCustomers();
+      location.href = `customer.html?id=${encodeURIComponent(created.id)}`;
     } catch (e){
       console.error(e);
-      $("btnAdd").disabled = true;
+      showError(e?.message || "Create failed.");
     }
+  };
+
+  // ----- AUTH UI -----
+  async function refreshAuthUI(){
+    const btnLogin = $("btnLogin");
+    const btnLogout = $("btnLogout");
+    const pill = $("authPill");
+
+    if (!window.supabase?.auth) {
+      btnLogin.style.display = "none";
+      btnLogout.style.display = "none";
+      pill.style.display = "inline-flex";
+      pill.textContent = "Supabase not loaded";
+      return;
+    }
+
+    const { data } = await window.supabase.auth.getSession();
+    const email = data?.session?.user?.email;
+
+    btnLogin.style.display = email ? "none" : "inline-flex";
+    btnLogout.style.display = email ? "inline-flex" : "none";
+    pill.style.display = email ? "inline-flex" : "none";
+    pill.textContent = email ? `Logged in: ${email}` : "";
   }
 
-  // ---------- login/logout ----------
   $("btnLogin").onclick = async () => {
-    const email = prompt("Enter your email:");
-    if (!email) return;
+    try{
+      const email = prompt("Enter your email:");
+      if (!email) return;
 
-    await window.supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: location.href }
-    });
+      await window.supabase.auth.signInWithOtp({
+        email,
+        options:{ emailRedirectTo: location.href }
+      });
 
-    alert("Check your email for the login link.");
+      alert("Check your email for the login link.");
+    } catch (e){
+      console.error(e);
+      showError(e?.message || "Login failed.");
+    }
   };
 
   $("btnLogout").onclick = async () => {
@@ -428,100 +478,18 @@
     await loadCustomers();
   };
 
-  // keep UI synced
-  window.supabase.auth.onAuthStateChange(async () => {
+  if (window.supabase?.auth?.onAuthStateChange) {
+    window.supabase.auth.onAuthStateChange(async () => {
+      await refreshAuthUI();
+      await loadCustomers();
+    });
+  }
+
+  (async () => {
     await refreshAuthUI();
     await loadCustomers();
-  });
-
-  // ---------- search ----------
-  $("q").addEventListener("input", (e) => {
-    const q = norm(e.target.value);
-    const filtered = !q ? ALL : ALL.filter(c => customerSearchBlob(c).includes(q));
-    render(filtered);
-  });
-
-  // ---------- Add Customer modal ----------
-  function openModal(){
-    $("overlay").style.display = "block";
-    $("modal").style.display = "block";
-    $("modal").setAttribute("aria-hidden","false");
-    $("add_first").focus();
-  }
-  function closeModal(){
-    $("overlay").style.display = "none";
-    $("modal").style.display = "none";
-    $("modal").setAttribute("aria-hidden","true");
-  }
-  function clearAddForm(){
-    $("add_first").value = "";
-    $("add_last").value = "";
-    $("add_email").value = "";
-    $("add_mobile").value = "";
-    $("add_home").value = "";
-    $("add_work").value = "";
-    $("add_company").value = "";
-    $("add_address").value = "";
-    $("add_notes").value = "";
-  }
-
-  $("btnAdd").onclick = async () => {
-    // double-check logged in
-    const { data } = await window.supabase.auth.getSession();
-    if (!data?.session) {
-      showErr("Please Login first.");
-      return;
-    }
-    showErr("");
-    clearAddForm();
-    openModal();
-  };
-
-  $("btnCloseModal").onclick = closeModal;
-  $("btnCancelAdd").onclick = closeModal;
-  $("overlay").onclick = closeModal;
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
-
-  $("btnCreate").onclick = async () => {
-    try{
-      showErr("");
-      const first = $("add_first").value.trim();
-      const last = $("add_last").value.trim();
-
-      if (!first && !last) {
-        showErr("Please enter at least a first or last name.");
-        return;
-      }
-
-      const created = await window.createCustomerInSupabase({
-        firstName: first,
-        lastName: last,
-        email: $("add_email").value.trim(),
-        mobilePhone: $("add_mobile").value.trim(),
-        homePhone: $("add_home").value.trim(),
-        workPhone: $("add_work").value.trim(),
-        company: $("add_company").value.trim(),
-        address: $("add_address").value.trim(),
-        notes: $("add_notes").value.trim()
-      });
-
-      if (!created) throw new Error("Create did not return a customer.");
-
-      // update local list + render
-      ALL = [created, ...ALL];
-      render(!norm($("q").value) ? ALL : ALL.filter(c => customerSearchBlob(c).includes(norm($("q").value))));
-
-      closeModal();
-      showOk("Customer created");
-    } catch (e){
-      console.error(e);
-      showErr(e?.message || "Create failed.");
-    }
-  };
-
-  // ---------- boot ----------
-  await refreshAuthUI();
-  await loadCustomers();
+  })();
 </script>
+
 </body>
 </html>
