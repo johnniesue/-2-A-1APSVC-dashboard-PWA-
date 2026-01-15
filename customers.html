@@ -107,6 +107,7 @@
       border-radius:14px;
       margin-top:12px;
       display:none;
+      white-space:pre-wrap;
     }
   </style>
 </head>
@@ -126,8 +127,8 @@
           <input id="q" type="search" placeholder="Search customers…" />
         </div>
 
-        <button class="btn btnPrimary" id="btnLogin">Login</button>
-        <button class="btn" id="btnLogout" style="display:none;">Logout</button>
+        <button class="btn btnPrimary" id="btnLogin" type="button">Login</button>
+        <button class="btn" id="btnLogout" type="button" style="display:none;">Logout</button>
         <div class="pill" id="authPill" style="display:none;"></div>
 
         <a class="btn" href="./index.html">Dashboard</a>
@@ -145,7 +146,7 @@
   <div id="grid" class="grid"></div>
 </main>
 
-<!-- ✅ MUST be module -->
+<!-- MUST be module because customer-data.js uses import -->
 <script type="module" src="./customer-data.js"></script>
 
 <script>
@@ -160,18 +161,19 @@
     document.getElementById("count").textContent = list.length;
 
     if (!list.length){
-      grid.innerHTML =
-        `<div class="card"><p class="line">No customers found.</p></div>`;
+      grid.innerHTML = `<div class="card"><p class="line">No customers found.</p></div>`;
       return;
     }
 
     grid.innerHTML = list.map(c => {
       const name = `${c.first_name || ""} ${c.last_name || ""}`.trim();
+      const phone = c.mobile_phone || c.home_phone || c.work_phone || "";
+      const email = c.email || "";
       return `
         <div class="card" onclick="location.href='customer.html?id=${c.id}'">
           <p class="name">${name || "(No name)"}</p>
-          <p class="line">${c.email || ""}</p>
-          <p class="line">${c.mobile_phone || ""}</p>
+          <p class="line">${email}</p>
+          <p class="line">${phone}</p>
         </div>
       `;
     }).join("");
@@ -180,11 +182,13 @@
   async function loadCustomers(){
     try{
       msg.style.display = "none";
+      msg.textContent = "";
       ALL = await initializeCustomerData();
       render(ALL);
-    } catch {
-      msg.textContent = "Not logged in. Click Login to view customers.";
+    } catch (e){
+      msg.textContent = "Not logged in. Click Login to view customers.\n\n" + (e?.message || e);
       msg.style.display = "block";
+      render([]);
     }
   }
 
@@ -192,16 +196,19 @@
     const v = norm(e.target.value);
     render(
       !v ? ALL : ALL.filter(c =>
-        `${c.first_name} ${c.last_name} ${c.email} ${c.mobile_phone}`
+        `${c.first_name} ${c.last_name} ${c.email} ${c.mobile_phone} ${c.home_phone} ${c.work_phone} ${c.address} ${c.city} ${c.state} ${c.zip}`
           .toLowerCase()
           .includes(v)
       )
     );
   });
 
-  // ---------- AUTH ----------
+  // ---------- AUTH (use window.supabase because modules are scoped) ----------
   async function refreshAuthUI(){
-    const { data } = await supabase.auth.getSession();
+    const sb = window.supabase;
+    if (!sb) return; // customer-data.js not loaded yet
+
+    const { data } = await sb.auth.getSession();
     const email = data?.session?.user?.email;
 
     btnLogin.style.display = email ? "none" : "inline-block";
@@ -211,10 +218,13 @@
   }
 
   btnLogin.onclick = async () => {
+    const sb = window.supabase;
+    if (!sb) return alert("Supabase not loaded yet. Refresh and try again.");
+
     const email = prompt("Enter your email:");
     if (!email) return;
 
-    await supabase.auth.signInWithOtp({
+    await sb.auth.signInWithOtp({
       email,
       options:{ emailRedirectTo: location.href }
     });
@@ -223,17 +233,29 @@
   };
 
   btnLogout.onclick = async () => {
-    await supabase.auth.signOut();
+    const sb = window.supabase;
+    if (!sb) return;
+
+    await sb.auth.signOut();
     await refreshAuthUI();
     await loadCustomers();
   };
 
-  supabase.auth.onAuthStateChange(async () => {
-    await refreshAuthUI();
-    await loadCustomers();
-  });
+  // Wait for module to load, then wire auth listener
+  (function initWhenSupabaseReady(){
+    const sb = window.supabase;
+    if (!sb){
+      setTimeout(initWhenSupabaseReady, 50);
+      return;
+    }
 
-  refreshAuthUI().then(loadCustomers);
+    sb.auth.onAuthStateChange(async () => {
+      await refreshAuthUI();
+      await loadCustomers();
+    });
+
+    refreshAuthUI().then(loadCustomers);
+  })();
 </script>
 
 </body>
