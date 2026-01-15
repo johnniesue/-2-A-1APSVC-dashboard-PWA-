@@ -63,6 +63,7 @@
       border-radius:999px;
       font-size:13px;
       color:var(--muted);
+      white-space:nowrap;
     }
 
     .search{ flex:1; min-width:260px; }
@@ -73,6 +74,7 @@
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.06);
       color:var(--text);
+      outline:none;
     }
 
     .grid{
@@ -98,7 +100,7 @@
     }
 
     .name{ font-weight:800; margin:0 0 6px; font-size:16px;}
-    .line{ margin:0; font-size:13px; color:var(--muted); }
+    .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35; }
 
     .error{
       background:rgba(255,90,106,.12);
@@ -166,14 +168,17 @@
     }
 
     grid.innerHTML = list.map(c => {
-      const name = `${c.first_name || ""} ${c.last_name || ""}`.trim();
+      const name = `${c.first_name || ""} ${c.last_name || ""}`.trim() || "(No name)";
       const phone = c.mobile_phone || c.home_phone || c.work_phone || "";
       const email = c.email || "";
+      const address = c.address || "";  // ✅ THIS IS THE ADDED LINE
+
       return `
         <div class="card" onclick="location.href='customer.html?id=${c.id}'">
-          <p class="name">${name || "(No name)"}</p>
+          <p class="name">${name}</p>
           <p class="line">${email}</p>
           <p class="line">${phone}</p>
+          <p class="line">${address}</p>
         </div>
       `;
     }).join("");
@@ -206,7 +211,7 @@
   // ---------- AUTH (use window.supabase because modules are scoped) ----------
   async function refreshAuthUI(){
     const sb = window.supabase;
-    if (!sb) return; // customer-data.js not loaded yet
+    if (!sb) return;
 
     const { data } = await sb.auth.getSession();
     const email = data?.session?.user?.email;
@@ -241,7 +246,6 @@
     await loadCustomers();
   };
 
-  // Wait for module to load, then wire auth listener
   (function initWhenSupabaseReady(){
     const sb = window.supabase;
     if (!sb){
