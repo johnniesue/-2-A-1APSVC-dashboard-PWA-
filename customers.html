@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>A-1APSVC • Customers</title>
 
+  <!-- silence favicon 404 -->
+  <link rel="icon" href="data:,">
+
   <style>
     :root { --bg:#0b1220; --card:#111b2e; --muted:#93a4c7; --text:#e7eefc; --accent:#4da3ff; --danger:#ff5a6a; }
 
@@ -17,7 +20,7 @@
 
     header{
       position:sticky; top:0;
-      background:rgba(11,18,32,.9);
+      background:rgba(11,18,32,.92);
       backdrop-filter: blur(10px);
       border-bottom:1px solid rgba(255,255,255,.08);
       padding:14px 16px;
@@ -26,10 +29,11 @@
 
     .wrap{ max-width:1100px; margin:0 auto; padding:16px;}
     .top{ display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+    .brand{ display:flex; flex-direction:column; gap:2px;}
     .brand h1{ font-size:18px; margin:0; font-weight:800;}
-    .brand p{ margin:4px 0 0; font-size:12px; color:var(--muted);}
+    .brand p{ margin:0; font-size:12px; color:var(--muted);}
 
-    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; flex:1; }
 
     .btn{
       background:transparent;
@@ -43,10 +47,15 @@
       user-select:none;
     }
     .btn:hover{ border-color:rgba(255,255,255,.28); }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; }
 
     .btnPrimary{
       background:rgba(77,163,255,.16);
       border-color:rgba(77,163,255,.40);
+    }
+    .btnDanger{
+      background:rgba(255,90,106,.12);
+      border-color:rgba(255,90,106,.35);
     }
 
     .pill{
@@ -63,7 +72,7 @@
     }
 
     .search{ flex:1; min-width:260px; }
-    input[type="search"]{
+    input{
       width:100%;
       padding:10px 12px;
       border-radius:12px;
@@ -71,8 +80,11 @@
       background:rgba(255,255,255,.06);
       color:var(--text);
       outline:none;
+      box-sizing:border-box;
     }
-    input[type="search"]::placeholder{ color:rgba(231,238,252,.55); }
+    input::placeholder{ color:rgba(231,238,252,.55); }
+
+    .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
 
     .grid{
       display:grid;
@@ -90,14 +102,11 @@
       cursor:pointer;
       transition: transform .08s ease, border-color .08s ease;
     }
-    .card:hover{
-      transform: translateY(-1px);
-      border-color: rgba(77,163,255,.35);
-    }
-    .card:active{ transform: translateY(0px) scale(.995); }
+    .card:hover{ transform: translateY(-1px); border-color: rgba(77,163,255,.35); }
+    .card:active{ transform: translateY(0) scale(.995); }
 
     .name{ font-weight:800; margin:0 0 6px; font-size:16px;}
-    .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35; }
+    .line{ margin:0; font-size:13px; color:var(--muted); line-height:1.35;}
     .line strong{ color:var(--text); font-weight:650; }
 
     .error{
@@ -108,7 +117,60 @@
       margin-top:12px;
       display:none;
       color:#ffd3d8;
-      white-space:pre-wrap;
+    }
+
+    /* ---------- Modal (Add Customer) ---------- */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      display:none;
+      z-index:50;
+    }
+    .modal{
+      position:fixed;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      width:min(720px, 92vw);
+      background:rgba(11,18,32,.98);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      box-shadow:0 20px 80px rgba(0,0,0,.55);
+      display:none;
+      z-index:60;
+      overflow:hidden;
+    }
+    .modalHeader{
+      padding:14px 16px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .modalHeader h2{ margin:0; font-size:16px; font-weight:850; }
+    .modalBody{ padding:16px; }
+
+    .formGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .full{ grid-column:1 / -1; }
+    .field label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 6px;
+    }
+    .modalActions{
+      padding:14px 16px;
+      border-top:1px solid rgba(255,255,255,.10);
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
     }
   </style>
 </head>
@@ -123,24 +185,25 @@
         <p>Supabase live data</p>
       </div>
 
-      <div class="actions" style="flex:1; justify-content:flex-end;">
+      <div class="actions">
         <div class="search">
           <input id="q" type="search" placeholder="Search name, phone, email, city, street..." />
         </div>
 
-        <button class="btn btnPrimary" id="btnAdd">+ Add</button>
+        <button class="btn btnPrimary" id="btnAdd" type="button">+ Add</button>
 
-        <button class="btn btnPrimary" id="btnLogin">Login</button>
-        <button class="btn" id="btnLogout" style="display:none;">Logout</button>
+        <button class="btn btnPrimary" id="btnLogin" type="button">Login</button>
+        <button class="btn" id="btnLogout" type="button" style="display:none;">Logout</button>
         <div class="pill" id="authPill" style="display:none;"></div>
 
         <a class="btn" href="./index.html">Dashboard</a>
       </div>
     </div>
 
-    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+    <div class="stats">
       <div class="pill"><span id="count">0</span> customers loaded</div>
       <div class="pill"><span id="shown">0</span> shown</div>
+      <div class="pill">Source: <span style="color:rgba(231,238,252,.75)">Supabase public.customers</span></div>
     </div>
   </div>
 </header>
@@ -150,175 +213,258 @@
   <div id="grid" class="grid"></div>
 </main>
 
-<!-- ✅ IMPORTANT: run as a module and import the data layer BEFORE using it -->
-<script type="module">
-  import "./customer-data.js";
+<!-- Add modal -->
+<div id="overlay" class="overlay"></div>
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modalHeader">
+    <h2>Add Customer</h2>
+    <button class="btn" id="btnCloseModal" type="button">Close</button>
+  </div>
+  <div class="modalBody">
+    <div class="formGrid">
+      <div class="field">
+        <label>First name</label>
+        <input id="a_first" type="text" autocomplete="given-name">
+      </div>
+      <div class="field">
+        <label>Last name</label>
+        <input id="a_last" type="text" autocomplete="family-name">
+      </div>
+      <div class="field full">
+        <label>Email</label>
+        <input id="a_email" type="email" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Mobile phone</label>
+        <input id="a_mobile" type="text">
+      </div>
+      <div class="field">
+        <label>Home phone</label>
+        <input id="a_home" type="text">
+      </div>
+      <div class="field full">
+        <label>Work phone</label>
+        <input id="a_work" type="text">
+      </div>
+      <div class="field full">
+        <label>Company</label>
+        <input id="a_company" type="text">
+      </div>
+      <div class="field full">
+        <label>Address (single line)</label>
+        <input id="a_address" type="text" placeholder="123 Main St, City, ST 77777">
+      </div>
+    </div>
+  </div>
+  <div class="modalActions">
+    <button class="btn" id="btnCancelAdd" type="button">Cancel</button>
+    <button class="btn btnPrimary" id="btnCreate" type="button">Create</button>
+  </div>
+</div>
 
-  const msgEl = document.getElementById("msg");
-  const grid = document.getElementById("grid");
-  const countEl = document.getElementById("count");
-  const shownEl = document.getElementById("shown");
-  const qEl = document.getElementById("q");
+<!-- IMPORTANT: load customer-data FIRST (module creates globals) -->
+<script type="module" src="./customer-data.js"></script>
 
-  const btnLogin = document.getElementById("btnLogin");
-  const btnLogout = document.getElementById("btnLogout");
-  const authPill = document.getElementById("authPill");
-  const btnAdd = document.getElementById("btnAdd");
-
+<script>
+  // ---- state ----
   let ALL = [];
 
-  function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
+  const $ = (id) => document.getElementById(id);
+  const msgEl = $("msg");
+  const gridEl = $("grid");
+  const qEl = $("q");
+  const countEl = $("count");
+  const shownEl = $("shown");
 
-  function showError(text){
+  function norm(v){ return (v ?? "").toString().toLowerCase().trim(); }
+  function esc(s){ return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  function setMsg(text){
     msgEl.style.display = text ? "block" : "none";
     msgEl.textContent = text || "";
   }
 
-  function customerSearchBlob(c){
+  function blob(c){
     return [
       c.first_name, c.last_name, c.email,
       c.mobile_phone, c.home_phone, c.work_phone,
-      c.address, c.city, c.state, c.zip, c.company
+      c.address, c.city, c.state, c.zip,
+      c.company
     ].map(norm).join(" ");
   }
 
   function render(list){
     shownEl.textContent = String(list.length);
-    countEl.textContent = String(ALL.length);
 
     if (!list.length){
-      grid.innerHTML = `<div class="card" style="cursor:default;"><p class="line"><strong>No customers found.</strong></p><p class="line">Try a different search.</p></div>`;
+      gridEl.innerHTML = `<div class="card" style="cursor:default;">
+        <p class="name">No customers found</p>
+        <p class="line">Try a different search.</p>
+      </div>`;
       return;
     }
 
-    grid.innerHTML = list.map(c => {
-      const name = `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || "(No name)";
+    gridEl.innerHTML = list.map(c => {
+      const name = `${c.first_name || ""} ${c.last_name || ""}`.trim() || "(No name)";
       const phone = c.mobile_phone || c.home_phone || c.work_phone || "";
-      const email = c.email || "";
       const addr  = c.address || "";
+      const email = c.email || "";
 
       return `
-        <div class="card" data-id="${String(c.id)}">
-          <p class="name">${escapeHtml(name)}</p>
-          <p class="line"><strong>Email:</strong> ${escapeHtml(email)}</p>
-          <p class="line"><strong>Phone:</strong> ${escapeHtml(phone)}</p>
-          <p class="line"><strong>Address:</strong> ${escapeHtml(addr)}</p>
+        <div class="card" data-id="${esc(c.id)}">
+          <p class="name">${esc(name)}</p>
+          <p class="line"><strong>Email:</strong> ${esc(email)}</p>
+          <p class="line"><strong>Phone:</strong> ${esc(phone)}</p>
+          <p class="line"><strong>Address:</strong> ${esc(addr)}</p>
         </div>
       `;
     }).join("");
-
-    grid.onclick = (e) => {
-      const card = e.target.closest(".card");
-      if (!card) return;
-      const id = card.getAttribute("data-id");
-      location.href = `./customer.html?id=${encodeURIComponent(id)}`;
-    };
-  }
-
-  function escapeHtml(str){
-    return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-  }
-
-  async function refreshAuthUI(){
-    const supabase = window.supabase;
-    if (!supabase?.auth) return;
-
-    const { data } = await supabase.auth.getSession();
-    const email = data?.session?.user?.email;
-
-    btnLogin.style.display = email ? "none" : "inline-block";
-    btnLogout.style.display = email ? "inline-block" : "none";
-    authPill.style.display = email ? "inline-flex" : "none";
-    authPill.textContent = email ? `Logged in: ${email}` : "";
   }
 
   async function loadCustomers(){
     try{
-      showError("");
-
-      // ✅ now guaranteed available because we imported customer-data.js above
+      setMsg("");
+      if (typeof window.initializeCustomerData !== "function") {
+        throw new Error("initializeCustomerData not available yet (customer-data.js not loaded).");
+      }
       ALL = await window.initializeCustomerData();
-      render(ALL);
-
-      // sync counts
       countEl.textContent = String(ALL.length);
-      shownEl.textContent = String(ALL.length);
+
+      const q = norm(qEl.value);
+      const filtered = !q ? ALL : ALL.filter(c => blob(c).includes(q));
+      render(filtered);
     } catch (e){
       console.error(e);
-      showError("Not logged in or blocked by RLS.\n\nClick Login, then refresh.\n\n" + (e?.message || e));
-      ALL = [];
-      render([]);
+      setMsg("Not logged in (or blocked by RLS). Click Login to view customers.");
+      gridEl.innerHTML = "";
+      countEl.textContent = "0";
+      shownEl.textContent = "0";
     }
   }
 
-  // Search
-  qEl.addEventListener("input", (e) => {
-    const q = norm(e.target.value);
-    const filtered = !q ? ALL : ALL.filter(c => customerSearchBlob(c).includes(q));
+  // click -> open detail page
+  gridEl.addEventListener("click", (e) => {
+    const card = e.target.closest(".card");
+    if (!card) return;
+    const id = card.getAttribute("data-id");
+    if (!id) return;
+    location.href = `customer.html?id=${encodeURIComponent(id)}`;
+  });
+
+  // search
+  qEl.addEventListener("input", () => {
+    const q = norm(qEl.value);
+    const filtered = !q ? ALL : ALL.filter(c => blob(c).includes(q));
     render(filtered);
   });
 
-  // Add button (basic: prompt + create)
-  btnAdd.onclick = async () => {
+  // ---- auth UI ----
+  async function refreshAuthUI(){
     try{
-      const first = (prompt("First name:") || "").trim();
-      const last  = (prompt("Last name:") || "").trim();
-      if (!first && !last) return;
+      const sess = await window.supabase?.auth?.getSession();
+      const email = sess?.data?.session?.user?.email;
 
-      const email = (prompt("Email (optional):") || "").trim();
-      const mobile = (prompt("Mobile phone (optional):") || "").trim();
-      const address = (prompt("Address (optional):") || "").trim();
-
-      const created = await window.createCustomerInSupabase({
-        firstName: first,
-        lastName: last,
-        email,
-        mobilePhone: mobile,
-        address,
-      });
-
-      if (!created) throw new Error("Create did not return a customer.");
-      ALL = [created, ...ALL];
-      qEl.value = "";
-      render(ALL);
+      $("btnLogin").style.display = email ? "none" : "inline-block";
+      $("btnLogout").style.display = email ? "inline-block" : "none";
+      $("authPill").style.display = email ? "inline-flex" : "none";
+      $("authPill").textContent = email ? `Logged in: ${email}` : "";
     } catch (e){
-      console.error(e);
-      alert("Add failed.\n\n" + (e?.message || e));
+      console.warn("refreshAuthUI failed", e);
     }
-  };
+  }
 
-  // Login/logout
-  btnLogin.onclick = async () => {
-    const supabase = window.supabase;
-    if (!supabase?.auth) return alert("Supabase client not ready.");
-
-    const email = prompt("Enter your email:");
+  $("btnLogin").addEventListener("click", async () => {
+    const email = prompt("Enter your email for a magic login link:");
     if (!email) return;
 
-    await supabase.auth.signInWithOtp({
-      email,
-      options:{ emailRedirectTo: location.href }
-    });
-
-    alert("Check your email for the login link.");
-  };
-
-  btnLogout.onclick = async () => {
-    const supabase = window.supabase;
-    await supabase.auth.signOut();
-    await refreshAuthUI();
-    await loadCustomers();
-  };
-
-  // Auth change
-  window.supabase?.auth?.onAuthStateChange(async () => {
-    await refreshAuthUI();
-    await loadCustomers();
+    try{
+      await window.supabase.auth.signInWithOtp({
+        email,
+        options:{ emailRedirectTo: location.href }
+      });
+      alert("Check your email for the login link.");
+    } catch (e){
+      console.error(e);
+      alert("Login failed: " + (e?.message || e));
+    }
   });
 
-  // Boot
-  await refreshAuthUI();
-  await loadCustomers();
+  $("btnLogout").addEventListener("click", async () => {
+    try{
+      await window.supabase.auth.signOut();
+      await refreshAuthUI();
+      await loadCustomers();
+    } catch (e){
+      console.error(e);
+      alert("Logout failed: " + (e?.message || e));
+    }
+  });
+
+  // ---- Add customer modal ----
+  function openModal(){
+    $("overlay").style.display = "block";
+    $("modal").style.display = "block";
+    $("modal").setAttribute("aria-hidden","false");
+  }
+  function closeModal(){
+    $("overlay").style.display = "none";
+    $("modal").style.display = "none";
+    $("modal").setAttribute("aria-hidden","true");
+  }
+
+  $("btnAdd").addEventListener("click", openModal);
+  $("btnCloseModal").addEventListener("click", closeModal);
+  $("btnCancelAdd").addEventListener("click", closeModal);
+  $("overlay").addEventListener("click", closeModal);
+  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeModal(); });
+
+  $("btnCreate").addEventListener("click", async () => {
+    try{
+      if (typeof window.createCustomerInSupabase !== "function") {
+        throw new Error("createCustomerInSupabase missing (customer-data.js not loaded).");
+      }
+
+      const payload = {
+        firstName: $("a_first").value.trim(),
+        lastName: $("a_last").value.trim(),
+        email: $("a_email").value.trim(),
+        mobilePhone: $("a_mobile").value.trim(),
+        homePhone: $("a_home").value.trim(),
+        workPhone: $("a_work").value.trim(),
+        company: $("a_company").value.trim(),
+        address: $("a_address").value.trim(),
+      };
+
+      const created = await window.createCustomerInSupabase(payload);
+      if (!created) throw new Error("Create did not return a customer.");
+
+      closeModal();
+
+      // clear form
+      ["a_first","a_last","a_email","a_mobile","a_home","a_work","a_company","a_address"].forEach(id=>$(id).value="");
+
+      // refresh list
+      await loadCustomers();
+
+      // jump to new record
+      location.href = `customer.html?id=${encodeURIComponent(created.id)}`;
+    } catch (e){
+      console.error(e);
+      alert("Create failed: " + (e?.message || e));
+    }
+  });
+
+  // wait until module has had a chance to run, then load
+  (async () => {
+    await refreshAuthUI();
+    await loadCustomers();
+
+    // keep UI in sync if auth state changes (magic link click)
+    window.supabase?.auth?.onAuthStateChange(async () => {
+      await refreshAuthUI();
+      await loadCustomers();
+    });
+  })();
 </script>
 
 </body>
