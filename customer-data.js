@@ -1,56 +1,26 @@
 /**
- * customer-data.js
- * Source of truth: Supabase (public.customers)
- * Cache: localStorage (a1apsvc-customers)
+ * customer-data.js (GitHub Pages friendly)
+ * - Uses Supabase JS v2 for auth (magic link / session storage)
+ * - Uses REST API for CRUD with the logged-in user's access token
  *
- * GitHub Pages compatible:
- * - Supabase JS auth client (magic link login)
- * - REST fetch uses Bearer access token
- *
- * UI expects snake_case keys.
+ * UI shape returned: snake_case fields:
+ *   first_name, last_name, email, mobile_phone, home_phone, work_phone,
+ *   street1, street2, city, state, zip, address (computed)
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = "https://zzigzylypifjokskehkn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_ei0eWX62jrS8MMq7odV4iQ_IW-9yqG6";
-const PROJECT_REF = "zzigzylypifjokskehkn";
 
+// Cache keys
 const CACHE_KEY = "a1apsvc-customers";
 const CACHE_TIME_KEY = "a1apsvc-customers-cache-time";
 
-// Create client and expose globally
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.supabase = supabase;
 
-async function getSupabaseAccessToken() {
-  // Preferred: Supabase JS auth session (GitHub Pages login)
-  try {
-    const { data, error } = await supabase.auth.getSession();
-    if (!error) {
-      const token = data?.session?.access_token;
-      if (token) return token;
-    }
-  } catch {}
-
-  // Fallback: legacy key if you ever used it
-  const legacyKey = `sb-${PROJECT_REF}-auth-token`;
-  const raw = localStorage.getItem(legacyKey);
-  if (!raw) return null;
-
-  try {
-    const obj = JSON.parse(raw);
-    return (
-      obj?.access_token ||
-      obj?.currentSession?.access_token ||
-      obj?.session?.access_token ||
-      obj?.data?.session?.access_token ||
-      null
-    );
-  } catch {
-    return null;
-  }
-}
+// -------------------- Helpers --------------------
 
 function buildAddress(r) {
   const parts = [
@@ -58,6 +28,7 @@ function buildAddress(r) {
     r.street2,
     [r.city, r.state, r.zip].filter(Boolean).join(" "),
   ].filter(Boolean);
+
   return parts.join(", ");
 }
 
@@ -74,54 +45,55 @@ function mapRowToUI(r) {
     home_phone: r.home_phone ?? "",
     work_phone: r.work_phone ?? "",
 
-    address: buildAddress(r),
+    street1: r.street1 ?? "",
+    street2: r.street2 ?? "",
     city: r.city ?? "",
     state: r.state ?? "",
     zip: r.zip ?? "",
 
-    // IMPORTANT:
-    // Your table does NOT have tags/notes right now.
-    // We provide safe defaults so the UI won't crash later.
-    tags: [],
-    notes: "",
+    // convenience for UI display/search
+    address: buildAddress(r),
 
     created_at: r.created_at ?? null,
     updated_at: r.updated_at ?? null,
   };
 }
 
-async function supabaseFetchJson(url, method = "GET", body = null) {
-  const accessToken = await getSupabaseAccessToken();
-  if (!accessToken) {
-    throw new Error("Not logged in. Click Login on Customers page.");
-  }
+async function getAccessTokenOrThrow() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
 
-  const headers = {
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${accessToken}`,
-    "Content-Type": "application/json",
-    Prefer: "return=representation",
-  };
+  const token = data?.session?.access_token;
+  if (!token) throw new Error("Not logged in. Click Login first.");
+  return token;
+}
 
-  const resp = await fetch(url, {
+async function supabaseFetchJson(pathWithQuery, method = "GET", body = null) {
+  const token = await getAccessTokenOrThrow();
+
+  const resp = await fetch(`${SUPABASE_URL}${pathWithQuery}`, {
     method,
-    headers,
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
     body: body ? JSON.stringify(body) : null,
   });
 
+  const text = await resp.text();
   if (!resp.ok) {
-    const msg = await resp.text();
-    throw new Error(`Supabase error ${resp.status}: ${msg}`);
+    throw new Error(`Supabase error ${resp.status}: ${text}`);
   }
 
-  const text = await resp.text();
   return text ? JSON.parse(text) : null;
 }
 
-/**
- * Load customers from Supabase, with a 6-hour cache fallback.
- */
+// -------------------- Public API --------------------
+
 async function initializeCustomerData() {
+  // 6 hour cache
   const cached = localStorage.getItem(CACHE_KEY);
   const cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || "0", 10);
   const maxAgeMs = 6 * 60 * 60 * 1000;
@@ -129,17 +101,19 @@ async function initializeCustomerData() {
   if (cached && cachedTime && Date.now() - cachedTime < maxAgeMs) {
     try {
       return JSON.parse(cached);
-    } catch {}
+    } catch {
+      // ignore
+    }
   }
 
-  // ✅ Removed tags, notes from select list (they do not exist in your table)
-  const url =
-    `${SUPABASE_URL}/rest/v1/customers` +
-    `?select=id,first_name,last_name,company,email,mobile_phone,home_phone,work_phone,street1,street2,city,state,zip,created_at,updated_at` +
-    `&order=created_at.desc` +
-    `&limit=5000`;
+  // IMPORTANT: only select columns that exist in your schema
+  const rows = await supabaseFetchJson(
+    "/rest/v1/customers" +
+      "?select=id,first_name,last_name,company,email,mobile_phone,home_phone,work_phone,street1,street2,city,state,zip,created_at,updated_at" +
+      "&order=created_at.desc" +
+      "&limit=5000"
+  );
 
-  const rows = await supabaseFetchJson(url, "GET");
   const customers = (rows || []).map(mapRowToUI);
 
   localStorage.setItem(CACHE_KEY, JSON.stringify(customers));
@@ -149,51 +123,72 @@ async function initializeCustomerData() {
 
 async function createCustomerInSupabase(c) {
   const payload = {
-    first_name: c.firstName ?? c.first_name ?? "",
-    last_name: c.lastName ?? c.last_name ?? "",
-    email: c.email ?? null,
-    mobile_phone: c.mobilePhone ?? c.mobile_phone ?? null,
-    home_phone: c.homePhone ?? c.home_phone ?? null,
-    work_phone: c.workPhone ?? c.work_phone ?? null,
-    company: c.company ?? null,
+    first_name: (c.firstName ?? c.first_name ?? "").trim(),
+    last_name: (c.lastName ?? c.last_name ?? "").trim(),
+    email: (c.email ?? "").trim() || null,
+    mobile_phone: (c.mobilePhone ?? c.mobile_phone ?? "").trim() || null,
+    home_phone: (c.homePhone ?? c.home_phone ?? "").trim() || null,
+    work_phone: (c.workPhone ?? c.work_phone ?? "").trim() || null,
+    company: (c.company ?? "").trim() || null,
 
-    street1: (c.address ?? c.street1 ?? "").trim() || null,
+    street1: (c.street1 ?? c.address ?? "").trim() || null,
     street2: (c.street2 ?? "").trim() || null,
     city: (c.city ?? "").trim() || null,
     state: (c.state ?? "").trim() || null,
     zip: (c.zip ?? "").trim() || null,
   };
 
-  const url = `${SUPABASE_URL}/rest/v1/customers`;
-  const rows = await supabaseFetchJson(url, "POST", payload);
+  const rows = await supabaseFetchJson("/rest/v1/customers", "POST", payload);
   return rows?.[0] ? mapRowToUI(rows[0]) : null;
 }
 
 async function updateCustomerInSupabase(id, c) {
+  // NOTE: customer.html currently sends { address } as a single line.
+  // We'll store that into street1 and clear street2 unless you later split it out.
   const payload = {
-    first_name: c.firstName || "",
-    last_name: c.lastName || "",
-    email: c.email || null,
-    mobile_phone: c.mobilePhone || null,
-    home_phone: c.homePhone || null,
-    work_phone: c.workPhone || null,
-    company: c.company || null,
-    street1: (c.address || "").trim() || null,
+    first_name: (c.firstName ?? c.first_name ?? "").trim(),
+    last_name: (c.lastName ?? c.last_name ?? "").trim(),
+    email: (c.email ?? "").trim() || null,
+    mobile_phone: (c.mobilePhone ?? c.mobile_phone ?? "").trim() || null,
+    home_phone: (c.homePhone ?? c.home_phone ?? "").trim() || null,
+    work_phone: (c.workPhone ?? c.work_phone ?? "").trim() || null,
+    company: (c.company ?? "").trim() || null,
+
+    street1: (c.street1 ?? c.address ?? "").trim() || null,
+    street2: (c.street2 ?? "").trim() || null,
+    city: (c.city ?? "").trim() || null,
+    state: (c.state ?? "").trim() || null,
+    zip: (c.zip ?? "").trim() || null,
   };
 
-  const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(id)}`;
-  const rows = await supabaseFetchJson(url, "PATCH", payload);
+  const rows = await supabaseFetchJson(
+    `/rest/v1/customers?id=eq.${encodeURIComponent(id)}`,
+    "PATCH",
+    payload
+  );
+
+  // clear cache so list refreshes next load
+  localStorage.removeItem(CACHE_KEY);
+  localStorage.removeItem(CACHE_TIME_KEY);
+
   return rows?.[0] ? mapRowToUI(rows[0]) : null;
 }
 
 async function deleteCustomerInSupabase(id) {
-  const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(id)}`;
-  await supabaseFetchJson(url, "DELETE");
+  await supabaseFetchJson(
+    `/rest/v1/customers?id=eq.${encodeURIComponent(id)}`,
+    "DELETE"
+  );
+
+  localStorage.removeItem(CACHE_KEY);
+  localStorage.removeItem(CACHE_TIME_KEY);
+
   return true;
 }
 
-// Expose functions globally for pages
+// expose for pages
 window.initializeCustomerData = initializeCustomerData;
 window.createCustomerInSupabase = createCustomerInSupabase;
 window.updateCustomerInSupabase = updateCustomerInSupabase;
 window.deleteCustomerInSupabase = deleteCustomerInSupabase;
+
