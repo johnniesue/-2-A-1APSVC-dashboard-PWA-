@@ -3,34 +3,53 @@
  * Source of truth: Supabase (public.customers)
  * Cache: localStorage (a1apsvc-customers)
  *
- * IMPORTANT:
- * - Uses publishable (anon) key ONLY.
- * - Uses the logged-in Supabase access token stored in localStorage
- *   under sb-<projectref>-auth-token (set when you login on dashboard).
+ * Works on GitHub Pages:
+ * - Uses Supabase JS auth client for Login (magic link)
+ * - Reads token from either:
+ *   1) Supabase JS auth storage (preferred)
+ *   2) legacy sb-<projectref>-auth-token (fallback)
  *
- * FIX INCLUDED:
- * - customers.html expects snake_case fields: first_name, last_name, mobile_phone, etc.
- * - This file now returns those exact keys (so names show up again).
+ * UI expects snake_case: first_name, last_name, mobile_phone, etc.
  */
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = "https://zzigzylypifjokskehkn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_ei0eWX62jrS8MMq7odV4iQ_IW-9yqG6";
 const PROJECT_REF = "zzigzylypifjokskehkn";
 
-// Cache keys (keep ONE consistent key)
+// Cache keys
 const CACHE_KEY = "a1apsvc-customers";
 const CACHE_TIME_KEY = "a1apsvc-customers-cache-time";
 
-// Pull access token from Supabase auth storage (set by your dashboard login)
-function getSupabaseAccessToken() {
-  const key = `sb-${PROJECT_REF}-auth-token`;
-  const raw = localStorage.getItem(key);
+// ✅ Create client and expose globally so customers.html can call supabase.auth.*
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.supabase = supabase;
+
+/**
+ * Pull access token from:
+ * 1) Supabase JS auth session (preferred)
+ * 2) Legacy storage key sb-<projectref>-auth-token (fallback)
+ */
+async function getSupabaseAccessToken() {
+  // 1) Supabase Auth (GitHub Pages login)
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (!error) {
+      const token = data?.session?.access_token;
+      if (token) return token;
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2) Legacy storage (old dashboard login)
+  const legacyKey = `sb-${PROJECT_REF}-auth-token`;
+  const raw = localStorage.getItem(legacyKey);
   if (!raw) return null;
 
   try {
     const obj = JSON.parse(raw);
-
-    // Supabase can store in a few shapes depending on version
     return (
       obj?.access_token ||
       obj?.currentSession?.access_token ||
@@ -53,20 +72,12 @@ function buildAddress(r) {
   return parts.join(", ");
 }
 
-/**
- * ✅ IMPORTANT:
- * customers.html is using:
- *  c.first_name, c.last_name, c.mobile_phone, etc.
- * So we must return that exact shape (snake_case).
- */
 function mapRowToUI(r) {
   return {
-    id: r.id, // UUID string
+    id: r.id,
 
-    // ✅ Names (snake_case)
     first_name: r.first_name ?? "",
     last_name: r.last_name ?? "",
-
     company: r.company ?? "",
 
     email: r.email ?? "",
@@ -74,13 +85,11 @@ function mapRowToUI(r) {
     home_phone: r.home_phone ?? "",
     work_phone: r.work_phone ?? "",
 
-    // customers.html uses c.address / c.city / c.state / c.zip
     address: buildAddress(r),
     city: r.city ?? "",
     state: r.state ?? "",
     zip: r.zip ?? "",
 
-    // Optional extras (safe defaults)
     tags: r.tags ?? [],
     notes: r.notes ?? "",
 
@@ -90,11 +99,9 @@ function mapRowToUI(r) {
 }
 
 async function supabaseFetchJson(url, method = "GET", body = null) {
-  const accessToken = getSupabaseAccessToken();
+  const accessToken = await getSupabaseAccessToken();
   if (!accessToken) {
-    throw new Error(
-      "Not logged in. Please login on the Dashboard first, then open Customers again."
-    );
+    throw new Error("Not logged in. Click Login on Customers page.");
   }
 
   const headers = {
@@ -115,7 +122,6 @@ async function supabaseFetchJson(url, method = "GET", body = null) {
     throw new Error(`Supabase error ${resp.status}: ${msg}`);
   }
 
-  // Some endpoints return empty body; handle safely
   const text = await resp.text();
   return text ? JSON.parse(text) : null;
 }
@@ -124,7 +130,7 @@ async function supabaseFetchJson(url, method = "GET", body = null) {
  * Load customers from Supabase, with a 6-hour local cache fallback.
  */
 async function initializeCustomerData() {
-  // Migrate any older legacy key if it exists
+  // migrate legacy key if it exists
   const legacy = localStorage.getItem("a1apsvc_customers");
   if (legacy && !localStorage.getItem(CACHE_KEY)) {
     localStorage.setItem(CACHE_KEY, legacy);
@@ -132,14 +138,12 @@ async function initializeCustomerData() {
 
   const cached = localStorage.getItem(CACHE_KEY);
   const cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || "0", 10);
-  const maxAgeMs = 6 * 60 * 60 * 1000; // 6 hours
+  const maxAgeMs = 6 * 60 * 60 * 1000;
 
   if (cached && cachedTime && Date.now() - cachedTime < maxAgeMs) {
     try {
       return JSON.parse(cached);
-    } catch {
-      // ignore cache parse errors
-    }
+    } catch {}
   }
 
   const url =
@@ -156,11 +160,6 @@ async function initializeCustomerData() {
   return customers;
 }
 
-/**
- * CRUD helpers (so Add/Edit/Delete can write to Supabase)
- * NOTE: Keep accepting camelCase input (from forms),
- * but always return snake_case objects to the UI.
- */
 async function createCustomerInSupabase(c) {
   const payload = {
     first_name: c.firstName ?? c.first_name ?? "",
@@ -171,7 +170,6 @@ async function createCustomerInSupabase(c) {
     work_phone: c.workPhone ?? c.work_phone ?? null,
     company: c.company ?? null,
 
-    // simple: store whatever they typed into street1
     street1: (c.address ?? c.street1 ?? "").trim() || null,
     street2: (c.street2 ?? "").trim() || null,
     city: (c.city ?? "").trim() || null,
@@ -197,7 +195,6 @@ async function updateCustomerInSupabase(id, c) {
     work_phone: c.workPhone || null,
     company: c.company || null,
     street1: (c.address || "").trim() || null
-    // ✅ removed updated_at (only include it if you KNOW the column exists)
   };
 
   const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(id)}`;
@@ -206,9 +203,13 @@ async function updateCustomerInSupabase(id, c) {
 }
 
 async function deleteCustomerInSupabase(id) {
-  const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(
-    id
-  )}`;
+  const url = `${SUPABASE_URL}/rest/v1/customers?id=eq.${encodeURIComponent(id)}`;
   await supabaseFetchJson(url, "DELETE");
   return true;
 }
+
+// Export functions globally for customers.html / customer.html
+window.initializeCustomerData = initializeCustomerData;
+window.createCustomerInSupabase = createCustomerInSupabase;
+window.updateCustomerInSupabase = updateCustomerInSupabase;
+window.deleteCustomerInSupabase = deleteCustomerInSupabase;
